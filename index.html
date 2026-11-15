@@ -41,6 +41,18 @@ button.sec{background:transparent;color:var(--testo);border:1px solid var(--bord
 .ok h2{margin:0 0 6px}
 .ok p{color:var(--grigio);margin:0}
 .nascosto{display:none}
+.spunta-riga{display:flex;align-items:center;gap:10px;margin:14px 0 2px;color:var(--testo);font-size:15px;font-weight:500;cursor:pointer}
+.spunta-riga input{width:22px;height:22px;min-height:0;padding:0;accent-color:var(--acc);-webkit-appearance:checkbox;appearance:auto}
+.giorni{margin-top:12px;border:1px solid var(--bordo);border-radius:12px;overflow:hidden}
+.giorno{display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1fr) 34px;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid var(--bordo)}
+.giorno:first-child{border-top:0}
+.giorno .gg{font-size:14px;font-weight:600;line-height:1.2}
+.giorno .gg small{display:block;color:var(--grigio);font-weight:400}
+.giorno input{min-height:40px;padding:8px 6px;font-size:15px;min-width:0}
+.giorno button{margin:0;min-height:34px;width:34px;padding:0;border-radius:8px;background:transparent;border:1px solid var(--bordo);color:var(--grigio);font-size:18px;font-weight:400}
+.giorno.tolto{opacity:.35}
+.giorno.tolto input{pointer-events:none}
+.aiuto{color:var(--grigio);font-size:13px;margin-top:6px}
 footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
 </style>
 </head>
@@ -67,13 +79,21 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
     <select id="mansione" name="mansione" required></select>
     <input id="mansioneAltro" name="mansioneAltro" class="nascosto" placeholder="Scrivi la mansione" style="margin-top:8px">
 
-    <label for="data">Giorno <b>*</b></label>
+    <label for="data" id="lblData">Giorno <b>*</b></label>
     <input id="data" name="data" type="date" required>
+
+    <label class="spunta-riga"><input type="checkbox" id="multi"> Più giorni di fila (stessa commessa)</label>
+    <div id="boxMulti" class="nascosto">
+      <label for="dataFine">Fino al <b>*</b></label>
+      <input id="dataFine" type="date">
+      <div class="aiuto">Gli orari qui sotto valgono per tutti i giorni: poi puoi cambiarli giorno per giorno o togliere un giorno con ✕.</div>
+    </div>
 
     <div class="riga">
       <div><label for="inizio">Ora arrivo <b>*</b></label><input id="inizio" name="inizio" type="time" required></div>
       <div><label for="fine">Ora fine <b>*</b></label><input id="fine" name="fine" type="time" required></div>
     </div>
+    <div id="giorni" class="giorni nascosto"></div>
     <div id="ore" class="ore"></div>
 
     <label for="note">Note</label>
@@ -129,7 +149,15 @@ function preparaForm() {
 }
 
 function aggiornaOre() {
-  var a = $('inizio').value, b = $('fine').value, box = $('ore');
+  var box = $('ore');
+  if (typeof multi === 'function' && multi() && GIORNI.length) {
+    var gg = attivi(), tot = 0, ok = true;
+    gg.forEach(function (g) { if (g.inizio && g.fine) tot += oreLocali(g.inizio, g.fine); else ok = false; });
+    box.textContent = gg.length + (gg.length === 1 ? ' giorno' : ' giorni') + ' · totale ' + String(Math.round(tot * 100) / 100).replace('.', ',') + ' h' + (ok ? '' : ' (mancano degli orari)');
+    box.style.display = 'block';
+    return;
+  }
+  var a = $('inizio').value, b = $('fine').value;
   if (!a || !b) { box.style.display = 'none'; return; }
   var m = function (s) { var x = s.split(':'); return +x[0] * 60 + +x[1]; };
   var d = m(b) - m(a), dopo = d < 0;
@@ -162,15 +190,65 @@ function svuotaCoda() {
 }
 window.addEventListener('online', svuotaCoda);
 
-function fatto(d, ore, inCoda) {
+function fatto(d, ore, inCoda, n, ultimo) {
   mem.set('tecnico', d.tecnico); mem.set('mansione', d.mansione);
   ricorda('commesse', d.commessa); ricorda('locations', d.location);
-  var g = d.data.split('-').reverse().join('/');
+  var f = function (x) { return x.split('-').reverse().join('/'); };
+  var g = n > 1 ? n + ' giorni (' + f(d.data) + ' – ' + f(ultimo) + ')' : f(d.data);
   $('riassunto').textContent = g + ' · ' + d.commessa + ' · ' + String(ore).replace('.', ',') + ' h' +
     (inCoda ? ' — salvata sul telefono, la invio appena c’è rete' : '');
   $('f').classList.add('nascosto'); $('fatto').classList.remove('nascosto');
   window.scrollTo(0, 0);
 }
+
+var GIORNI = []; // [{data, inizio, fine, mod, tolto}]
+var NOMI_G = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+function isoAdd(iso, n) { var p = iso.split('-'); var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n)); return d.toISOString().slice(0, 10); }
+function multi() { return $('multi').checked; }
+function rigeneraGiorni() {
+  var da = $('data').value, a = $('dataFine').value, vecchi = {};
+  GIORNI.forEach(function (g) { vecchi[g.data] = g; });
+  GIORNI = [];
+  if (da && a && a >= da) {
+    for (var d = da, i = 0; d <= a && i < 31; d = isoAdd(d, 1), i++) {
+      var v = vecchi[d];
+      GIORNI.push(v && v.mod ? v : { data: d, inizio: $('inizio').value, fine: $('fine').value, mod: false, tolto: v ? v.tolto : false });
+    }
+  }
+  disegnaGiorni();
+}
+function disegnaGiorni() {
+  var box = $('giorni');
+  if (!multi() || !GIORNI.length) { box.classList.add('nascosto'); box.innerHTML = ''; aggiornaOre(); return; }
+  box.classList.remove('nascosto');
+  box.innerHTML = GIORNI.map(function (g, i) {
+    var p = g.data.split('-'), wd = NOMI_G[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()];
+    return '<div class="giorno' + (g.tolto ? ' tolto' : '') + '" data-i="' + i + '">' +
+      '<div class="gg">' + wd + '<small>' + p[2] + '/' + p[1] + '</small></div>' +
+      '<input type="time" data-k="inizio" value="' + g.inizio + '" aria-label="Arrivo">' +
+      '<input type="time" data-k="fine" value="' + g.fine + '" aria-label="Fine">' +
+      '<button type="button" aria-label="' + (g.tolto ? 'Rimetti' : 'Togli') + ' giorno">' + (g.tolto ? '↺' : '✕') + '</button></div>';
+  }).join('');
+  aggiornaOre();
+}
+$('giorni').addEventListener('input', function (e) {
+  var r = e.target.closest('.giorno'); if (!r || !e.target.dataset.k) return;
+  var g = GIORNI[+r.dataset.i]; g[e.target.dataset.k] = e.target.value; g.mod = true; aggiornaOre();
+});
+$('giorni').addEventListener('click', function (e) {
+  if (e.target.tagName !== 'BUTTON') return;
+  var g = GIORNI[+e.target.closest('.giorno').dataset.i]; g.tolto = !g.tolto; disegnaGiorni();
+});
+$('multi').addEventListener('change', function () {
+  $('boxMulti').classList.toggle('nascosto', !multi());
+  $('lblData').innerHTML = multi() ? 'Dal giorno <b>*</b>' : 'Giorno <b>*</b>';
+  $('invia').textContent = multi() ? 'Invia giornate' : 'Invia giornata';
+  if (multi() && !$('dataFine').value && $('data').value) $('dataFine').value = isoAdd($('data').value, 1);
+  rigeneraGiorni();
+});
+$('data').addEventListener('change', function () { if (multi() && $('dataFine').value < this.value) $('dataFine').value = this.value; rigeneraGiorni(); });
+$('dataFine').addEventListener('change', rigeneraGiorni);
+function attivi() { return GIORNI.filter(function (g) { return !g.tolto; }); }
 
 function oreLocali(a, b) { var m = function (s) { var x = s.split(':'); return +x[0] * 60 + +x[1]; }; var d = m(b) - m(a); if (d < 0) d += 1440; return Math.round(d / 60 * 100) / 100; }
 
@@ -179,8 +257,12 @@ $('mansione').addEventListener('change', function () {
   $('mansioneAltro').classList.toggle('nascosto', !altro);
   if (altro) $('mansioneAltro').focus();
 });
-$('inizio').addEventListener('input', aggiornaOre);
-$('fine').addEventListener('input', aggiornaOre);
+function orarioBase() {
+  if (multi()) { GIORNI.forEach(function (g) { if (!g.mod) { g.inizio = $('inizio').value; g.fine = $('fine').value; } }); disegnaGiorni(); }
+  else aggiornaOre();
+}
+$('inizio').addEventListener('input', orarioBase);
+$('fine').addEventListener('input', orarioBase);
 
 $('f').addEventListener('submit', function (ev) {
   ev.preventDefault();
@@ -192,29 +274,44 @@ $('f').addEventListener('submit', function (ev) {
   if (!d.commessa) manca.push('commessa');
   if (!d.mansione || (d.mansione === 'Altro' && !d.mansioneAltro)) manca.push('mansione');
   if (!d.data) manca.push('giorno');
-  if (!d.inizio) manca.push('ora arrivo');
-  if (!d.fine) manca.push('ora fine');
+  var payload = d, n = 1, ultimo = d.data, oreTot;
+  if (multi()) {
+    var gg = attivi();
+    if (!$('dataFine').value || !gg.length) manca.push('giorni');
+    else if (gg.some(function (g) { return !g.inizio || !g.fine; })) manca.push('orari di qualche giorno');
+    payload = { giornate: gg.map(function (g) { return Object.assign({}, d, { data: g.data, inizio: g.inizio, fine: g.fine }); }) };
+    n = gg.length; ultimo = gg.length ? gg[gg.length - 1].data : d.data;
+    if (gg.length) d.data = gg[0].data;
+    oreTot = gg.reduce(function (s, g) { return s + (g.inizio && g.fine ? oreLocali(g.inizio, g.fine) : 0); }, 0);
+  } else {
+    if (!d.inizio) manca.push('ora arrivo');
+    if (!d.fine) manca.push('ora fine');
+    oreTot = d.inizio && d.fine ? oreLocali(d.inizio, d.fine) : 0;
+  }
   if (manca.length) { $('err').textContent = 'Manca: ' + manca.join(', '); return; }
   $('err').textContent = '';
+  oreTot = Math.round(oreTot * 100) / 100;
   var accoda = function () {
-    var c = mem.get('coda', []); c.push(d); mem.set('coda', c);
-    fatto(d, oreLocali(d.inizio, d.fine), true);
+    var c = mem.get('coda', []); c.push(payload); mem.set('coda', c);
+    fatto(d, oreTot, true, n, ultimo);
   };
   if (!navigator.onLine) { accoda(); return; }
   $('invia').disabled = true; $('invia').textContent = 'Invio…';
-  invia(d).then(function (r) {
-    $('invia').disabled = false; $('invia').textContent = 'Invia giornata';
+  invia(payload).then(function (r) {
+    $('invia').disabled = false; $('invia').textContent = multi() ? 'Invia giornate' : 'Invia giornata';
     if (!r || !r.ok) { $('err').textContent = (r && r.errore) || 'Errore, riprova.'; return; }
-    fatto(d, r.ore, false);
+    fatto(d, r.ore, false, n, ultimo);
     svuotaCoda();
   }).catch(function () {
-    $('invia').disabled = false; $('invia').textContent = 'Invia giornata';
+    $('invia').disabled = false; $('invia').textContent = multi() ? 'Invia giornate' : 'Invia giornata';
     accoda();
   });
 });
 
 $('altra').addEventListener('click', function () {
-  ['note', 'inizio', 'fine'].forEach(function (k) { $(k).value = ''; });
+  ['note', 'inizio', 'fine', 'dataFine'].forEach(function (k) { $(k).value = ''; });
+  $('multi').checked = false; $('boxMulti').classList.add('nascosto'); $('lblData').innerHTML = 'Giorno <b>*</b>'; $('invia').textContent = 'Invia giornata';
+  GIORNI = []; disegnaGiorni();
   preparaForm();
   $('fatto').classList.add('nascosto'); $('f').classList.remove('nascosto');
 });
