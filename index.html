@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Level · Giornate</title>
+<meta name="theme-color" content="#0a0b0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Level Ore">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--acc:#f6981d;--acc2:#ffb347;--testo:#edeff3;--grigio:#9298a4;--bordo:#2d323d;--sfondo:#0a0b0e;--carta:#15171c;--carta2:#1b1e25;--ok:#52c79a;--rosso:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--sfondo);color:var(--testo);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:520px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+.coda{margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(120,169,255,.12);color:#78a9ff;font-size:14px;text-align:center;display:none}
+header{text-align:center;margin-bottom:18px}
+header img{height:46px;width:auto}
+header p{margin:8px 0 0;color:var(--grigio);font-size:14px;letter-spacing:.04em;text-transform:uppercase}
+.card{background:var(--carta);border:1px solid var(--bordo);border-radius:16px;padding:18px}
+label{display:block;font-size:13px;color:var(--grigio);margin:14px 0 6px;font-weight:600;letter-spacing:.02em}
+label:first-child{margin-top:0}
+label b{color:var(--acc)}
+input,select,textarea{width:100%;font:inherit;color:var(--testo);background:var(--carta2);border:1px solid var(--bordo);border-radius:10px;padding:12px;outline:none;min-height:48px;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--grigio) 50%),linear-gradient(135deg,var(--grigio) 50%,transparent 50%);background-position:calc(100% - 20px) 21px,calc(100% - 15px) 21px;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+input[type=date],input[type=time]{color-scheme:dark}
+textarea{min-height:80px;resize:vertical}
+.riga{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ore{margin-top:14px;padding:12px;border-radius:10px;background:rgba(246,152,29,.1);color:var(--acc2);text-align:center;font-weight:600;display:none}
+button{width:100%;margin-top:18px;min-height:52px;border:0;border-radius:12px;background:var(--acc);color:#111;font:inherit;font-weight:700;font-size:17px;cursor:pointer}
+button:disabled{opacity:.6}
+button.sec{background:transparent;color:var(--testo);border:1px solid var(--bordo)}
+.err{color:var(--rosso);margin-top:12px;text-align:center;min-height:1em;font-size:14px}
+.ok{text-align:center;padding:30px 10px}
+.ok .spunta{width:64px;height:64px;border-radius:50%;background:rgba(82,199,154,.15);color:var(--ok);font-size:34px;line-height:64px;margin:0 auto 12px}
+.ok h2{margin:0 0 6px}
+.ok p{color:var(--grigio);margin:0}
+.nascosto{display:none}
+footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="logo.png" alt="Level">
+    <p>Giornate tecnici</p>
+  </header>
+
+  <form id="f" class="card" autocomplete="on" novalidate>
+    <label for="tecnico">Nome e cognome <b>*</b></label>
+    <input id="tecnico" name="tecnico" required autocomplete="name" placeholder="Es. Mario Rossi">
+
+    <label for="commessa">Commessa / evento <b>*</b></label>
+    <input id="commessa" name="commessa" list="commesse" required placeholder="Es. Garage 21 – Lamborghini">
+    <datalist id="commesse"></datalist>
+
+    <label for="location">Location</label>
+    <input id="location" name="location" list="locations" placeholder="Es. Milano, Superstudio">
+    <datalist id="locations"></datalist>
+
+    <label for="mansione">Mansione <b>*</b></label>
+    <select id="mansione" name="mansione" required></select>
+    <input id="mansioneAltro" name="mansioneAltro" class="nascosto" placeholder="Scrivi la mansione" style="margin-top:8px">
+
+    <label for="data">Giorno <b>*</b></label>
+    <input id="data" name="data" type="date" required>
+
+    <div class="riga">
+      <div><label for="inizio">Ora arrivo <b>*</b></label><input id="inizio" name="inizio" type="time" required></div>
+      <div><label for="fine">Ora fine <b>*</b></label><input id="fine" name="fine" type="time" required></div>
+    </div>
+    <div id="ore" class="ore"></div>
+
+    <label for="note">Note</label>
+    <textarea id="note" name="note" placeholder="Pausa, trasferta, km, imprevisti…"></textarea>
+
+    <button id="invia" type="submit">Invia giornata</button>
+    <div id="err" class="err"></div>
+    <div id="coda" class="coda"></div>
+  </form>
+
+  <div id="fatto" class="card ok nascosto">
+    <div class="spunta">✓</div>
+    <h2>Giornata registrata</h2>
+    <p id="riassunto"></p>
+    <button id="altra" class="sec" type="button">Segna un'altra giornata</button>
+  </div>
+
+  <footer>Level Srl · audio video eventi</footer>
+</div>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbwbTgu-Mc81FVAd-FLqlCuefyPY7V7m-TYfM-WjXUKNxk8zffNF9FYCNAYiK09zOqiu/exec';
+var BASE = ['Fonico', 'Assistente audio', 'Tecnico video', 'Regia video', 'Operatore camera', 'Tecnico luci',
+            'Tecnico LED wall', 'Rigger', 'Responsabile tecnico', 'Montaggio / smontaggio', 'Facchino', 'Autista'];
+var $ = function (id) { return document.getElementById(id); };
+var mem = {
+  get: function (k, d) { try { var v = localStorage.getItem('lvl_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set: function (k, v) { try { localStorage.setItem('lvl_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+var MANSIONI = mem.get('mansioni', BASE);
+
+function oggi() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function riempiLista(id, valori) { $(id).innerHTML = valori.map(function (v) { return '<option value="' + esc(v) + '">'; }).join(''); }
+function ricorda(k, v) { if (!v) return; var a = mem.get(k, []).filter(function (x) { return x !== v; }); a.unshift(v); mem.set(k, a.slice(0, 15)); }
+
+function riempiMansioni() {
+  var sel = $('mansione'), prima = sel.value || mem.get('mansione', '');
+  sel.innerHTML = '<option value="">Scegli…</option>' +
+    MANSIONI.concat(['Altro']).map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('');
+  if (prima && (MANSIONI.indexOf(prima) >= 0 || prima === 'Altro')) sel.value = prima;
+}
+
+function preparaForm() {
+  riempiMansioni();
+  $('tecnico').value = mem.get('tecnico', '');
+  riempiLista('commesse', mem.get('commesse', []));
+  riempiLista('locations', mem.get('locations', []));
+  $('data').value = oggi();
+  $('mansioneAltro').classList.toggle('nascosto', $('mansione').value !== 'Altro');
+  aggiornaOre();
+  mostraCoda();
+}
+
+function aggiornaOre() {
+  var a = $('inizio').value, b = $('fine').value, box = $('ore');
+  if (!a || !b) { box.style.display = 'none'; return; }
+  var m = function (s) { var x = s.split(':'); return +x[0] * 60 + +x[1]; };
+  var d = m(b) - m(a), dopo = d < 0;
+  if (dopo) d += 1440;
+  var h = Math.floor(d / 60), mm = d % 60;
+  box.textContent = 'Totale: ' + h + ' h' + (mm ? ' ' + mm + ' min' : '') + (dopo ? '  (finisce il giorno dopo)' : '');
+  box.style.display = 'block';
+}
+
+// --- invio, con coda se non c'è campo (le giornate partono appena torna la rete)
+function invia(d) {
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(d) })
+    .then(function (r) { return r.json(); });
+}
+function mostraCoda() {
+  var n = mem.get('coda', []).length, box = $('coda');
+  box.textContent = n ? n + (n === 1 ? ' giornata in attesa' : ' giornate in attesa') + ' di rete: partono da sole appena c’è connessione.' : '';
+  box.style.display = n ? 'block' : 'none';
+}
+var svuotando = false;
+function svuotaCoda() {
+  var coda = mem.get('coda', []);
+  if (!coda.length || svuotando || !navigator.onLine) return;
+  svuotando = true;
+  invia(coda[0]).then(function (r) {
+    svuotando = false;
+    var c = mem.get('coda', []); c.shift(); mem.set('coda', c); mostraCoda();
+    if (r && r.ok) svuotaCoda();
+  }).catch(function () { svuotando = false; });
+}
+window.addEventListener('online', svuotaCoda);
+
+function fatto(d, ore, inCoda) {
+  mem.set('tecnico', d.tecnico); mem.set('mansione', d.mansione);
+  ricorda('commesse', d.commessa); ricorda('locations', d.location);
+  var g = d.data.split('-').reverse().join('/');
+  $('riassunto').textContent = g + ' · ' + d.commessa + ' · ' + String(ore).replace('.', ',') + ' h' +
+    (inCoda ? ' — salvata sul telefono, la invio appena c’è rete' : '');
+  $('f').classList.add('nascosto'); $('fatto').classList.remove('nascosto');
+  window.scrollTo(0, 0);
+}
+
+function oreLocali(a, b) { var m = function (s) { var x = s.split(':'); return +x[0] * 60 + +x[1]; }; var d = m(b) - m(a); if (d < 0) d += 1440; return Math.round(d / 60 * 100) / 100; }
+
+$('mansione').addEventListener('change', function () {
+  var altro = this.value === 'Altro';
+  $('mansioneAltro').classList.toggle('nascosto', !altro);
+  if (altro) $('mansioneAltro').focus();
+});
+$('inizio').addEventListener('input', aggiornaOre);
+$('fine').addEventListener('input', aggiornaOre);
+
+$('f').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var d = {};
+  ['tecnico', 'commessa', 'location', 'mansione', 'mansioneAltro', 'data', 'inizio', 'fine', 'note']
+    .forEach(function (k) { d[k] = $(k).value.trim(); });
+  var manca = [];
+  if (!d.tecnico) manca.push('nome');
+  if (!d.commessa) manca.push('commessa');
+  if (!d.mansione || (d.mansione === 'Altro' && !d.mansioneAltro)) manca.push('mansione');
+  if (!d.data) manca.push('giorno');
+  if (!d.inizio) manca.push('ora arrivo');
+  if (!d.fine) manca.push('ora fine');
+  if (manca.length) { $('err').textContent = 'Manca: ' + manca.join(', '); return; }
+  $('err').textContent = '';
+  var accoda = function () {
+    var c = mem.get('coda', []); c.push(d); mem.set('coda', c);
+    fatto(d, oreLocali(d.inizio, d.fine), true);
+  };
+  if (!navigator.onLine) { accoda(); return; }
+  $('invia').disabled = true; $('invia').textContent = 'Invio…';
+  invia(d).then(function (r) {
+    $('invia').disabled = false; $('invia').textContent = 'Invia giornata';
+    if (!r || !r.ok) { $('err').textContent = (r && r.errore) || 'Errore, riprova.'; return; }
+    fatto(d, r.ore, false);
+    svuotaCoda();
+  }).catch(function () {
+    $('invia').disabled = false; $('invia').textContent = 'Invia giornata';
+    accoda();
+  });
+});
+
+$('altra').addEventListener('click', function () {
+  ['note', 'inizio', 'fine'].forEach(function (k) { $(k).value = ''; });
+  preparaForm();
+  $('fatto').classList.add('nascosto'); $('f').classList.remove('nascosto');
+});
+
+preparaForm();
+// elenco mansioni aggiornato dal foglio (scheda "Mansioni")
+fetch(API + '?api=mansioni').then(function (r) { return r.json(); }).then(function (r) {
+  if (r && r.ok && r.mansioni && r.mansioni.length) { MANSIONI = r.mansioni; mem.set('mansioni', MANSIONI); riempiMansioni(); }
+}).catch(function () {});
+svuotaCoda();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
+</body>
+</html>
