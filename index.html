@@ -97,14 +97,12 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
     <button type="button" id="tabMie" role="tab">📅 Le mie giornate</button>
   </div>
 
-  <!-- LE MIE GIORNATE: solo le tue, col tuo codice -->
+  <!-- LE MIE GIORNATE: solo le tue, legate al tuo telefono -->
   <div id="mie" class="nascosto">
     <form id="entra" class="card nascosto" novalidate>
       <label for="mieNome">Nome e cognome</label>
       <input id="mieNome" autocomplete="name" placeholder="Es. Mario Rossi">
-      <label for="mieCodice">Il tuo codice</label>
-      <input id="mieCodice" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="4 cifre (te lo dà Giorgio)">
-      <div class="aiuto">Lo scrivi una volta sola: poi il telefono se lo ricorda. Vedi solo le tue giornate.</div>
+      <div class="aiuto">Scrivilo come in calendario. Lo scrivi una volta sola: da quel momento il tuo nome resta legato a questo telefono e vedi solo le tue giornate.</div>
       <button id="mieEntra" type="submit">Vedi le mie giornate</button>
       <div id="mieErr" class="err"></div>
     </form>
@@ -386,7 +384,7 @@ $('altra').addEventListener('click', function () {
   $('fatto').classList.add('nascosto'); $('f').classList.remove('nascosto');
 });
 
-// ================= LE MIE GIORNATE (solo le tue, col tuo codice) =================
+// ================= LE MIE GIORNATE (solo le tue, legate al tuo telefono) =================
 var MESI_N = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
 var GIORNI_N = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
 var MESE = oggi().slice(0, 7), giro = 0;
@@ -405,10 +403,22 @@ function scheda(quale) {
 $('tabSegna').addEventListener('click', function () { scheda('segna'); });
 $('tabMie').addEventListener('click', function () { scheda('mie'); });
 
+// il "documento" di questo telefono: un numero a caso creato la prima volta, che resta qui
+function idTelefono() {
+  var t = mem.get('telefono', '');
+  if (!/^[a-z0-9-]{16,64}$/i.test(t)) {
+    try { t = crypto.randomUUID(); } catch (e) {
+      t = ''; for (var i = 0; i < 32; i++) t += Math.floor(Math.random() * 16).toString(16);
+    }
+    mem.set('telefono', t);
+  }
+  return t;
+}
+
 function apriMie() {
   var io = mem.get('io', null);
-  if (!io || !io.nome || !io.codice) {
-    $('mieNome').value = mem.get('tecnico', ''); $('mieCodice').value = ''; $('mieErr').textContent = '';
+  if (!io || !io.nome) {
+    $('mieNome').value = mem.get('tecnico', ''); $('mieErr').textContent = '';
     $('entra').classList.remove('nascosto'); $('mieDati').classList.add('nascosto');
     return;
   }
@@ -422,17 +432,17 @@ function apriMie() {
 function caricaMie(io, daEntra) {
   var mio = ++giro;                 // se cambi mese di corsa, conta solo l'ultima richiesta
   $('mieStato').style.display = 'none';
-  var url = API + '?api=mie&nome=' + encodeURIComponent(io.nome) + '&codice=' + encodeURIComponent(io.codice) + '&mese=' + MESE;
+  var url = API + '?api=mie&nome=' + encodeURIComponent(io.nome) + '&tel=' + encodeURIComponent(idTelefono()) + '&mese=' + MESE;
   fetch(url).then(function (r) { return r.json(); }).then(function (r) {
     if (mio !== giro) return;
     if (!r || !r.ok) {
       var e = (r && r.errore) || 'Errore, riprova.';
       if (daEntra) { $('mieErr').textContent = e; $('mieEntra').disabled = false; $('mieEntra').textContent = 'Vedi le mie giornate'; return; }
-      if (/codice/i.test(e)) { mem.set('io', null); apriMie(); $('mieErr').textContent = e; return; }
+      if (/collegato|non trovato|telefono/i.test(e)) { mem.set('io', null); apriMie(); $('mieErr').textContent = e; return; }
       mostraStato(e); return;
     }
     if (daEntra) {
-      mem.set('io', { nome: r.nome, codice: io.codice });
+      mem.set('io', { nome: r.nome });
       $('mieEntra').disabled = false; $('mieEntra').textContent = 'Vedi le mie giornate';
       $('entra').classList.add('nascosto'); $('mieDati').classList.remove('nascosto');
     }
@@ -484,11 +494,11 @@ function disegnaMie(r, vecchio) {
 
 $('entra').addEventListener('submit', function (ev) {
   ev.preventDefault();
-  var nome = $('mieNome').value.trim(), codice = $('mieCodice').value.trim();
-  if (!nome || !codice) { $('mieErr').textContent = 'Scrivi nome e codice.'; return; }
+  var nome = $('mieNome').value.trim();
+  if (!nome) { $('mieErr').textContent = 'Scrivi il tuo nome e cognome.'; return; }
   $('mieErr').textContent = ''; $('mieEntra').disabled = true; $('mieEntra').textContent = 'Controllo…';
   MESE = oggi().slice(0, 7);
-  caricaMie({ nome: nome, codice: codice }, true);
+  caricaMie({ nome: nome }, true);
 });
 $('mesePrima').addEventListener('click', function () { MESE = meseAdd(MESE, -1); apriMie(); });
 $('meseDopo').addEventListener('click', function () { if (MESE < oggi().slice(0, 7)) { MESE = meseAdd(MESE, 1); apriMie(); } });
