@@ -54,6 +54,35 @@ button.sec{background:transparent;color:var(--testo);border:1px solid var(--bord
 .giorno.tolto input{pointer-events:none}
 .aiuto{color:var(--grigio);font-size:13px;margin-top:6px}
 footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
+/* schede in alto: Segna giornata / Le mie giornate */
+.schede{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--carta);border:1px solid var(--bordo);border-radius:14px;padding:5px;margin-bottom:14px}
+.schede button{margin:0;min-height:44px;font-size:15px;background:transparent;color:var(--grigio);border-radius:10px}
+.schede button.on{background:var(--acc);color:#111}
+/* pagina Le mie giornate */
+.mese{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;margin-bottom:12px}
+.mese button{margin:0;min-height:44px;width:44px;padding:0;border-radius:10px;background:var(--carta2);border:1px solid var(--bordo);color:var(--testo);font-size:20px}
+.mese button:disabled{opacity:.3}
+.mese h3{margin:0;text-align:center;font-size:18px;text-transform:capitalize}
+.sez{margin:18px 0 8px;font-size:13px;color:var(--grigio);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.voce{padding:11px 0;border-top:1px solid var(--bordo)}
+.voce:first-child{border-top:0}
+.voce .t{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.voce .t span:last-child{color:var(--acc2);white-space:nowrap}
+.voce .s{color:var(--grigio);font-size:14px;margin-top:2px}
+.voce .tbc{color:#78a9ff;font-size:12px;font-weight:700;margin-left:6px}
+.voce .t.solo span{color:var(--testo);white-space:normal}
+.voce .t.solo span.tbc{color:#78a9ff}
+.vuoto{color:var(--grigio);text-align:center;padding:14px 0;font-size:14px}
+.reso{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.reso div{background:var(--carta2);border:1px solid var(--bordo);border-radius:12px;padding:12px 4px}
+.reso b{display:block;font-size:24px;color:var(--acc)}
+.reso small{color:var(--grigio);font-size:12px}
+.reso-lav{margin-top:10px;font-size:14px}
+.reso-lav div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--bordo)}
+.reso-lav div span:last-child{color:var(--grigio);white-space:nowrap}
+.chi{display:flex;justify-content:space-between;align-items:center;color:var(--grigio);font-size:13px;margin-top:14px}
+.chi button{width:auto;margin:0;min-height:32px;padding:0 12px;font-size:13px;font-weight:600}
+.agg{color:var(--grigio);font-size:12px;text-align:center;margin-top:10px}
 </style>
 </head>
 <body>
@@ -63,6 +92,46 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
     <p>Giornate tecnici</p>
   </header>
 
+  <div class="schede" role="tablist">
+    <button type="button" id="tabSegna" class="on" role="tab">✏️ Segna giornata</button>
+    <button type="button" id="tabMie" role="tab">📅 Le mie giornate</button>
+  </div>
+
+  <!-- LE MIE GIORNATE: solo le tue, col tuo codice -->
+  <div id="mie" class="nascosto">
+    <form id="entra" class="card nascosto" novalidate>
+      <label for="mieNome">Nome e cognome</label>
+      <input id="mieNome" autocomplete="name" placeholder="Es. Mario Rossi">
+      <label for="mieCodice">Il tuo codice</label>
+      <input id="mieCodice" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="4 cifre (te lo dà Giorgio)">
+      <div class="aiuto">Lo scrivi una volta sola: poi il telefono se lo ricorda. Vedi solo le tue giornate.</div>
+      <button id="mieEntra" type="submit">Vedi le mie giornate</button>
+      <div id="mieErr" class="err"></div>
+    </form>
+
+    <div id="mieDati" class="nascosto">
+      <div class="card">
+        <div class="mese">
+          <button type="button" id="mesePrima" aria-label="Mese prima">‹</button>
+          <h3 id="meseNome"></h3>
+          <button type="button" id="meseDopo" aria-label="Mese dopo">›</button>
+        </div>
+        <div class="sez" style="margin-top:4px">Giornate segnate</div>
+        <div id="mieGiornate"></div>
+        <div class="sez">Resoconto del mese</div>
+        <div id="mieReso"></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="sez" style="margin-top:0">Prossimi lavori</div>
+        <div id="mieProssimi"></div>
+        <div id="mieAgg" class="agg"></div>
+      </div>
+      <div id="mieStato" class="coda"></div>
+      <div class="chi"><span id="mieChi"></span><button type="button" id="mieEsci" class="sec">Non sei tu? Esci</button></div>
+    </div>
+  </div>
+
+  <div id="segna">
   <form id="f" class="card" autocomplete="on" novalidate>
     <label for="tecnico">Nome e cognome <b>*</b></label>
     <input id="tecnico" name="tecnico" required autocomplete="name" placeholder="Es. Mario Rossi">
@@ -109,6 +178,7 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
     <h2>Giornata registrata</h2>
     <p id="riassunto"></p>
     <button id="altra" class="sec" type="button">Segna un'altra giornata</button>
+  </div>
   </div>
 
   <footer>Level Srl · audio video eventi</footer>
@@ -314,6 +384,117 @@ $('altra').addEventListener('click', function () {
   GIORNI = []; disegnaGiorni();
   preparaForm();
   $('fatto').classList.add('nascosto'); $('f').classList.remove('nascosto');
+});
+
+// ================= LE MIE GIORNATE (solo le tue, col tuo codice) =================
+var MESI_N = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+var GIORNI_N = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+var MESE = oggi().slice(0, 7), giro = 0;
+function numIt(n) { return String(Math.round((n || 0) * 100) / 100).replace('.', ','); }
+function nomeMese(m) { var p = m.split('-'); return MESI_N[+p[1] - 1] + ' ' + p[0]; }
+function meseAdd(m, n) { var p = m.split('-'), d = new Date(Date.UTC(+p[0], +p[1] - 1 + n, 1)); return d.toISOString().slice(0, 7); }
+function dataBella(iso) { var p = iso.split('-'), wd = GIORNI_N[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()]; return wd + ' ' + +p[2] + '/' + p[1]; }
+
+function scheda(quale) {
+  var mie = quale === 'mie';
+  $('tabSegna').classList.toggle('on', !mie); $('tabMie').classList.toggle('on', mie);
+  $('segna').classList.toggle('nascosto', mie); $('mie').classList.toggle('nascosto', !mie);
+  if (mie) apriMie();
+  window.scrollTo(0, 0);
+}
+$('tabSegna').addEventListener('click', function () { scheda('segna'); });
+$('tabMie').addEventListener('click', function () { scheda('mie'); });
+
+function apriMie() {
+  var io = mem.get('io', null);
+  if (!io || !io.nome || !io.codice) {
+    $('mieNome').value = mem.get('tecnico', ''); $('mieCodice').value = ''; $('mieErr').textContent = '';
+    $('entra').classList.remove('nascosto'); $('mieDati').classList.add('nascosto');
+    return;
+  }
+  $('entra').classList.add('nascosto'); $('mieDati').classList.remove('nascosto');
+  var vecchio = mem.get('mie_' + MESE, null);      // prima mostro l'ultima copia salvata, poi aggiorno
+  if (vecchio) disegnaMie(vecchio, true);
+  else { $('mieGiornate').innerHTML = '<div class="vuoto">Carico…</div>'; $('mieReso').innerHTML = ''; }
+  caricaMie(io);
+}
+
+function caricaMie(io, daEntra) {
+  var mio = ++giro;                 // se cambi mese di corsa, conta solo l'ultima richiesta
+  $('mieStato').style.display = 'none';
+  var url = API + '?api=mie&nome=' + encodeURIComponent(io.nome) + '&codice=' + encodeURIComponent(io.codice) + '&mese=' + MESE;
+  fetch(url).then(function (r) { return r.json(); }).then(function (r) {
+    if (mio !== giro) return;
+    if (!r || !r.ok) {
+      var e = (r && r.errore) || 'Errore, riprova.';
+      if (daEntra) { $('mieErr').textContent = e; $('mieEntra').disabled = false; $('mieEntra').textContent = 'Vedi le mie giornate'; return; }
+      if (/codice/i.test(e)) { mem.set('io', null); apriMie(); $('mieErr').textContent = e; return; }
+      mostraStato(e); return;
+    }
+    if (daEntra) {
+      mem.set('io', { nome: r.nome, codice: io.codice });
+      $('mieEntra').disabled = false; $('mieEntra').textContent = 'Vedi le mie giornate';
+      $('entra').classList.add('nascosto'); $('mieDati').classList.remove('nascosto');
+    }
+    r.salvato = new Date().toISOString();
+    mem.set('mie_' + r.mese, r);
+    if (r.mese === MESE) disegnaMie(r, false);
+  }).catch(function () {
+    if (mio !== giro) return;
+    if (daEntra) { $('mieErr').textContent = 'Serve la rete per entrare la prima volta.'; $('mieEntra').disabled = false; $('mieEntra').textContent = 'Vedi le mie giornate'; return; }
+    var v = mem.get('mie_' + MESE, null);
+    mostraStato(v ? 'Niente rete: vedi la copia salvata sul telefono.' : 'Niente rete: riprova quando c’è campo.');
+    if (!v) $('mieGiornate').innerHTML = '<div class="vuoto">Nessuna copia salvata per questo mese.</div>';
+  });
+}
+function mostraStato(t) { $('mieStato').textContent = t; $('mieStato').style.display = 'block'; }
+
+function disegnaMie(r, vecchio) {
+  var io = mem.get('io', {}) || {};
+  $('meseNome').textContent = nomeMese(MESE);
+  $('meseDopo').disabled = MESE >= oggi().slice(0, 7);
+  $('mieChi').textContent = '👷 ' + (r.nome || io.nome || '');
+  // giornate segnate
+  var gg = r.giornate || [];
+  $('mieGiornate').innerHTML = gg.length ? gg.map(function (g) {
+    var orari = g.inizio && g.fine ? g.inizio + '–' + g.fine : '';
+    var sotto = [g.mansione, g.location, orari].filter(Boolean).join(' · ');
+    return '<div class="voce"><div class="t"><span>' + esc(dataBella(g.data)) + ' · ' + esc(g.commessa || '(senza commessa)') + '</span><span>' + numIt(g.ore) + ' h</span></div>' +
+      (sotto ? '<div class="s">' + esc(sotto) + '</div>' : '') + '</div>';
+  }).join('') : '<div class="vuoto">Nessuna giornata segnata in ' + esc(nomeMese(MESE)) + '.</div>';
+  // resoconto del mese
+  var rs = r.resoconto || { giornate: 0, ore: 0, oltre8: 0, lavori: [] };
+  $('mieReso').innerHTML = '<div class="reso">' +
+    '<div><b>' + rs.giornate + '</b><small>' + (rs.giornate === 1 ? 'giornata' : 'giornate') + '</small></div>' +
+    '<div><b>' + numIt(rs.ore) + '</b><small>ore totali</small></div>' +
+    '<div><b>' + numIt(rs.oltre8) + '</b><small>ore oltre le 8</small></div></div>' +
+    (rs.lavori && rs.lavori.length ? '<div class="reso-lav">' + rs.lavori.map(function (l) {
+      return '<div><span>' + esc(l.lavoro) + '</span><span>' + l.giornate + (l.giornate === 1 ? ' giorno' : ' giorni') + ' · ' + numIt(l.ore) + ' h</span></div>';
+    }).join('') + '</div>' : '');
+  // prossimi lavori (dal calendario Level)
+  var pr = r.prossimi || [];
+  $('mieProssimi').innerHTML = pr.length ? pr.map(function (p) {
+    var sotto = [p.mansione, p.dove, p.orario, p.cosa].filter(Boolean).join(' · ');
+    return '<div class="voce"><div class="t solo"><span>' + esc(dataBella(p.giorno)) + ' · ' + esc(p.lavoro) + (p.tbc ? '<span class="tbc">DA CONFERMARE</span>' : '') + '</span></div>' +
+      (sotto ? '<div class="s">' + esc(sotto) + '</div>' : '') + '</div>';
+  }).join('') : '<div class="vuoto">Nessun lavoro in calendario per te nei prossimi giorni.</div>';
+  $('mieAgg').textContent = r.aggiornato ? 'Calendario aggiornato: ' + r.aggiornato : '';
+  if (vecchio && r.salvato) mostraStato('Copia salvata sul telefono, aggiorno…');
+}
+
+$('entra').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var nome = $('mieNome').value.trim(), codice = $('mieCodice').value.trim();
+  if (!nome || !codice) { $('mieErr').textContent = 'Scrivi nome e codice.'; return; }
+  $('mieErr').textContent = ''; $('mieEntra').disabled = true; $('mieEntra').textContent = 'Controllo…';
+  MESE = oggi().slice(0, 7);
+  caricaMie({ nome: nome, codice: codice }, true);
+});
+$('mesePrima').addEventListener('click', function () { MESE = meseAdd(MESE, -1); apriMie(); });
+$('meseDopo').addEventListener('click', function () { if (MESE < oggi().slice(0, 7)) { MESE = meseAdd(MESE, 1); apriMie(); } });
+$('mieEsci').addEventListener('click', function () {
+  Object.keys(localStorage).forEach(function (k) { if (k.indexOf('lvl_mie_') === 0) localStorage.removeItem(k); });
+  mem.set('io', null); MESE = oggi().slice(0, 7); apriMie();
 });
 
 preparaForm();
