@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Level · Facchini</title>
+<meta name="theme-color" content="#0a0b0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Level Facchini">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+:root{--acc:#f6981d;--acc2:#ffb347;--testo:#edeff3;--grigio:#9298a4;--bordo:#2d323d;--sfondo:#0a0b0e;--carta:#15171c;--carta2:#1b1e25;--ok:#52c79a;--rosso:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--sfondo);color:var(--testo);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:520px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}
+header{text-align:center;margin-bottom:18px}
+header img{height:46px;width:auto}
+header p{margin:8px 0 0;color:var(--grigio);font-size:14px;letter-spacing:.04em;text-transform:uppercase}
+.card{background:var(--carta);border:1px solid var(--bordo);border-radius:16px;padding:18px}
+label{display:block;font-size:13px;color:var(--grigio);margin:14px 0 6px;font-weight:600;letter-spacing:.02em}
+label:first-child{margin-top:0}
+label b{color:var(--acc)}
+input,textarea{width:100%;font:inherit;color:var(--testo);background:var(--carta2);border:1px solid var(--bordo);border-radius:10px;padding:12px;outline:none;min-height:48px;-webkit-appearance:none;appearance:none}
+input:focus,textarea:focus{border-color:var(--acc)}
+input[type=date],input[type=time]{color-scheme:dark}
+textarea{min-height:80px;resize:vertical}
+.riga{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info{margin-top:14px;padding:12px;border-radius:10px;background:rgba(246,152,29,.1);color:var(--acc2);text-align:center;font-weight:600;display:none}
+button{width:100%;margin-top:18px;min-height:52px;border:0;border-radius:12px;background:var(--acc);color:#111;font:inherit;font-weight:700;font-size:17px;cursor:pointer}
+button:disabled{opacity:.6}
+button.sec{background:transparent;color:var(--testo);border:1px solid var(--bordo)}
+.err{color:var(--rosso);margin-top:12px;text-align:center;min-height:1em;font-size:14px}
+.ok{text-align:center;padding:30px 10px}
+.ok .spunta{width:64px;height:64px;border-radius:50%;background:rgba(82,199,154,.15);color:var(--ok);font-size:34px;line-height:64px;margin:0 auto 12px}
+.ok h2{margin:0 0 6px}
+.ok p{color:var(--grigio);margin:0}
+.nascosto{display:none}
+.aiuto{color:var(--grigio);font-size:13px;margin-top:6px}
+.schede{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--carta);border:1px solid var(--bordo);border-radius:14px;padding:5px;margin-bottom:14px}
+.schede button{margin:0;min-height:44px;font-size:15px;background:transparent;color:var(--grigio);border-radius:10px}
+.schede button.on{background:var(--acc);color:#111}
+.ragazzo{display:grid;grid-template-columns:28px 1fr 40px;gap:8px;align-items:center;margin-top:8px}
+.ragazzo span{color:var(--grigio);font-size:14px;text-align:right}
+.ragazzo button{margin:0;min-height:44px;width:40px;padding:0;border-radius:10px;background:transparent;border:1px solid var(--bordo);color:var(--grigio);font-size:20px;font-weight:400}
+#aggiungi{min-height:44px;font-size:15px;margin-top:10px}
+.mese{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;margin-bottom:12px}
+.mese button{margin:0;min-height:44px;width:44px;padding:0;border-radius:10px;background:var(--carta2);border:1px solid var(--bordo);color:var(--testo);font-size:20px}
+.mese button:disabled{opacity:.3}
+.mese h3{margin:0;text-align:center;font-size:18px;text-transform:capitalize}
+.reso{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:6px}
+.reso div{background:var(--carta2);border:1px solid var(--bordo);border-radius:12px;padding:12px 4px}
+.reso b{display:block;font-size:20px;color:var(--acc)}
+.reso small{color:var(--grigio);font-size:12px}
+.voce{padding:11px 0;border-top:1px solid var(--bordo)}
+.voce .t{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.voce .t span:last-child{color:var(--acc2);white-space:nowrap}
+.voce .s{color:var(--grigio);font-size:14px;margin-top:2px}
+.vuoto{color:var(--grigio);text-align:center;padding:14px 0;font-size:14px}
+footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="../logo.png" alt="Level">
+    <p>Facchini</p>
+  </header>
+
+  <div class="schede" role="tablist">
+    <button type="button" id="tabSegna" class="on" role="tab">✏️ Segna giornata</button>
+    <button type="button" id="tabStorico" role="tab">📅 Storico</button>
+  </div>
+
+  <!-- SEGNA GIORNATA -->
+  <div id="segna">
+    <form id="f" class="card" novalidate>
+      <label for="nome">Il tuo nome e cognome <b>*</b></label>
+      <input id="nome" autocomplete="name" placeholder="Es. Anna Bianchi">
+      <label for="societa">Società <b>*</b></label>
+      <input id="societa" list="listaSocieta" autocomplete="organization" placeholder="Es. Coop Facchini Srl">
+      <datalist id="listaSocieta"></datalist>
+      <label for="data">Giorno <b>*</b></label>
+      <input id="data" type="date">
+      <label for="evento">Evento / cliente</label>
+      <input id="evento" list="listaEventi" placeholder="Es. Action">
+      <datalist id="listaEventi"></datalist>
+      <label for="location">Location <b>*</b></label>
+      <input id="location" list="listaLocation" placeholder="Es. Via Seprio 2, Milano">
+      <datalist id="listaLocation"></datalist>
+      <div class="riga">
+        <div><label for="inizio">Dalle <b>*</b></label><input id="inizio" type="time"></div>
+        <div><label for="fine">Alle <b>*</b></label><input id="fine" type="time"></div>
+      </div>
+      <label>Ragazzi venuti (nome e cognome) <b>*</b></label>
+      <div id="ragazzi"></div>
+      <button type="button" id="aggiungi" class="sec">＋ Aggiungi un ragazzo</button>
+      <label for="compenso">Compenso totale (€) <b>*</b></label>
+      <input id="compenso" inputmode="decimal" placeholder="Es. 360 o 360,50">
+      <div class="aiuto">Il totale per tutti i ragazzi di questa giornata.</div>
+      <label for="note">Note</label>
+      <textarea id="note" placeholder="Facoltativo"></textarea>
+      <div id="info" class="info"></div>
+      <button id="invia" type="submit">Invia giornata</button>
+      <div id="err" class="err"></div>
+    </form>
+    <div id="fatto" class="card ok nascosto">
+      <div class="spunta">✓</div>
+      <h2>Giornata inviata</h2>
+      <p id="riassunto"></p>
+      <button type="button" id="altra" class="sec">Segna un'altra giornata</button>
+    </div>
+  </div>
+
+  <!-- STORICO DEL MESE -->
+  <div id="storico" class="nascosto">
+    <div class="card">
+      <div class="mese">
+        <button type="button" id="mesePrima" aria-label="Mese prima">‹</button>
+        <h3 id="meseNome"></h3>
+        <button type="button" id="meseDopo" aria-label="Mese dopo">›</button>
+      </div>
+      <div id="reso"></div>
+      <div id="lista"></div>
+      <div id="errS" class="err"></div>
+    </div>
+  </div>
+
+  <footer>Level Srl · i dati vanno solo a Level</footer>
+</div>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbwbTgu-Mc81FVAd-FLqlCuefyPY7V7m-TYfM-WjXUKNxk8zffNF9FYCNAYiK09zOqiu/exec';
+var MESI_N = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+var GIORNI_N = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+function $(id) { return document.getElementById(id); }
+var mem = {
+  get: function (k, d) { try { var v = localStorage.getItem('lvf_' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set: function (k, v) { try { localStorage.setItem('lvf_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function oggi() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+function euro(n) { return (Math.round((n || 0) * 100) / 100).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function numIt(n) { return String(Math.round((n || 0) * 100) / 100).replace('.', ','); }
+function dataBella(iso) { var p = iso.split('-'), wd = GIORNI_N[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()]; return wd + ' ' + +p[2] + '/' + p[1]; }
+function idTelefono() {
+  var t = mem.get('telefono', '');
+  if (!/^[a-z0-9-]{16,64}$/i.test(t)) {
+    try { t = crypto.randomUUID(); } catch (e) { t = ''; for (var i = 0; i < 32; i++) t += Math.floor(Math.random() * 16).toString(16); }
+    mem.set('telefono', t);
+  }
+  return t;
+}
+function riempiLista(id, valori) { $(id).innerHTML = valori.map(function (v) { return '<option value="' + esc(v) + '">'; }).join(''); }
+function ricorda(k, v) {
+  if (!v) return;
+  var l = mem.get(k, []).filter(function (x) { return x.toLowerCase() !== v.toLowerCase(); });
+  l.unshift(v); mem.set(k, l.slice(0, 30));
+}
+function oreTra(a, b) {
+  var m = function (s) { var x = s.split(':'); return +x[0] * 60 + +x[1]; };
+  var d = m(b) - m(a); if (d < 0) d += 1440; return Math.round(d / 60 * 100) / 100;
+}
+
+// ---- i ragazzi: una casella per nome
+function aggiungiRagazzo(valore) {
+  var box = document.createElement('div'); box.className = 'ragazzo';
+  box.innerHTML = '<span></span><input list="listaRagazzi" autocapitalize="words" placeholder="Nome e cognome"><button type="button" aria-label="Togli">×</button>';
+  box.querySelector('input').value = valore || '';
+  box.querySelector('input').addEventListener('input', aggiornaInfo);
+  box.querySelector('button').addEventListener('click', function () {
+    if ($('ragazzi').children.length > 1) box.remove(); else box.querySelector('input').value = '';
+    numera(); aggiornaInfo();
+  });
+  $('ragazzi').appendChild(box); numera();
+  return box.querySelector('input');
+}
+function numera() { Array.prototype.forEach.call($('ragazzi').children, function (r, i) { r.querySelector('span').textContent = (i + 1) + '.'; }); }
+function nomiRagazzi() {
+  return Array.prototype.map.call($('ragazzi').querySelectorAll('input'), function (i) { return i.value.replace(/\s+/g, ' ').trim(); })
+    .filter(function (n) { return n; });
+}
+function aggiornaInfo() {
+  var n = nomiRagazzi().length, a = $('inizio').value, b = $('fine').value, box = $('info');
+  if (!n && !(a && b)) { box.style.display = 'none'; return; }
+  var t = n + (n === 1 ? ' ragazzo' : ' ragazzi');
+  if (a && b) t += ' · ' + numIt(oreTra(a, b)) + ' h ciascuno';
+  box.textContent = t; box.style.display = 'block';
+}
+var dl = document.createElement('datalist'); dl.id = 'listaRagazzi'; document.body.appendChild(dl);
+
+function preparaForm() {
+  $('nome').value = mem.get('nome', '');
+  $('societa').value = mem.get('societa', '');
+  $('data').value = oggi();
+  riempiLista('listaSocieta', mem.get('societaL', []));
+  riempiLista('listaEventi', mem.get('eventi', []));
+  riempiLista('listaLocation', mem.get('locations', []));
+  riempiLista('listaRagazzi', mem.get('ragazziL', []));
+  $('ragazzi').innerHTML = '';
+  aggiungiRagazzo();
+  aggiornaInfo();
+}
+$('aggiungi').addEventListener('click', function () { aggiungiRagazzo().focus(); });
+$('inizio').addEventListener('input', aggiornaInfo);
+$('fine').addEventListener('input', aggiornaInfo);
+
+$('f').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var d = { api: 'facchini', tel: idTelefono() };
+  ['nome', 'societa', 'data', 'evento', 'location', 'inizio', 'fine', 'compenso', 'note'].forEach(function (k) { d[k] = $(k).value.trim(); });
+  d.ragazzi = nomiRagazzi();
+  var manca = [];
+  if (!d.nome) manca.push('il tuo nome');
+  if (!d.societa) manca.push('società');
+  if (!d.data) manca.push('giorno');
+  if (!d.location) manca.push('location');
+  if (!d.inizio) manca.push('dalle');
+  if (!d.fine) manca.push('alle');
+  if (!d.ragazzi.length) manca.push('nomi dei ragazzi');
+  if (!d.compenso) manca.push('compenso');
+  if (manca.length) { $('err').textContent = 'Manca: ' + manca.join(', '); return; }
+  $('err').textContent = '';
+  $('invia').disabled = true; $('invia').textContent = 'Invio…';
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(d) })
+    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      $('invia').disabled = false; $('invia').textContent = 'Invia giornata';
+      if (!r || !r.ok) { $('err').textContent = (r && r.errore) || 'Errore, riprova.'; return; }
+      mem.set('nome', d.nome); mem.set('societa', d.societa);
+      ricorda('societaL', d.societa); ricorda('eventi', d.evento); ricorda('locations', d.location);
+      d.ragazzi.forEach(function (n) { ricorda('ragazziL', n); });
+      $('riassunto').textContent = dataBella(d.data) + ' · ' + d.location + ' · ' + r.ragazzi + (r.ragazzi === 1 ? ' ragazzo' : ' ragazzi') +
+        ' · ' + numIt(r.ore) + ' h · ' + euro(r.compenso) + ' €';
+      $('f').classList.add('nascosto'); $('fatto').classList.remove('nascosto');
+      window.scrollTo(0, 0);
+    })
+    .catch(function () {
+      $('invia').disabled = false; $('invia').textContent = 'Invia giornata';
+      $('err').textContent = 'Non c’è connessione: riprova appena hai rete (i dati restano scritti qui).';
+    });
+});
+$('altra').addEventListener('click', function () {
+  ['evento', 'location', 'inizio', 'fine', 'compenso', 'note'].forEach(function (k) { $(k).value = ''; });
+  preparaForm();
+  $('fatto').classList.add('nascosto'); $('f').classList.remove('nascosto');
+});
+
+// ---- storico del mese
+var MESE = oggi().slice(0, 7);
+function nomeMese(m) { var p = m.split('-'); return MESI_N[+p[1] - 1] + ' ' + p[0]; }
+function meseAdd(m, n) { var p = m.split('-'), d = new Date(+p[0], +p[1] - 1 + n, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+function apriStorico() {
+  $('meseNome').textContent = nomeMese(MESE);
+  $('meseDopo').disabled = MESE >= oggi().slice(0, 7);
+  var nome = ($('nome').value || mem.get('nome', '')).trim();
+  $('errS').textContent = ''; $('reso').innerHTML = ''; $('lista').innerHTML = '<div class="vuoto">Carico…</div>';
+  if (!nome) { $('lista').innerHTML = ''; $('errS').textContent = 'Scrivi prima il tuo nome nella scheda «Segna giornata».'; return; }
+  fetch(API + '?api=fac_mie&nome=' + encodeURIComponent(nome) + '&tel=' + encodeURIComponent(idTelefono()) + '&mese=' + MESE)
+    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      if (!r || !r.ok) { $('lista').innerHTML = ''; $('errS').textContent = (r && r.errore) || 'Errore, riprova.'; return; }
+      var t = r.totale || {};
+      $('reso').innerHTML = '<div class="reso"><div><b>' + (t.giornate || 0) + '</b><small>giornate</small></div>' +
+        '<div><b>' + (t.ragazzi || 0) + '</b><small>ragazzi</small></div>' +
+        '<div><b>' + euro(t.compenso) + '</b><small>€ totale</small></div></div>';
+      var gg = r.giornate || [];
+      $('lista').innerHTML = gg.length ? gg.map(function (g) {
+        var sotto = [g.evento, g.location, g.inizio && g.fine ? g.inizio + '–' + g.fine : '', g.societa].filter(Boolean).join(' · ');
+        return '<div class="voce"><div class="t"><span>' + esc(dataBella(g.data)) + ' · ' + g.ragazzi + (g.ragazzi === 1 ? ' ragazzo' : ' ragazzi') +
+          '</span><span>' + euro(g.compenso) + ' €</span></div><div class="s">' + esc(sotto) + '</div>' +
+          (g.nomi ? '<div class="s">' + esc(g.nomi) + '</div>' : '') + '</div>';
+      }).join('') : '<div class="vuoto">Nessuna giornata in ' + esc(nomeMese(MESE)) + '.</div>';
+    })
+    .catch(function () { $('lista').innerHTML = ''; $('errS').textContent = 'Non c’è connessione, riprova.'; });
+}
+$('mesePrima').addEventListener('click', function () { MESE = meseAdd(MESE, -1); apriStorico(); });
+$('meseDopo').addEventListener('click', function () { MESE = meseAdd(MESE, 1); apriStorico(); });
+function scheda(quale) {
+  var st = quale === 'storico';
+  $('tabSegna').classList.toggle('on', !st); $('tabStorico').classList.toggle('on', st);
+  $('segna').classList.toggle('nascosto', st); $('storico').classList.toggle('nascosto', !st);
+  if (st) apriStorico();
+}
+$('tabSegna').addEventListener('click', function () { scheda('segna'); });
+$('tabStorico').addEventListener('click', function () { scheda('storico'); });
+preparaForm();
+</script>
+</body>
+</html>
