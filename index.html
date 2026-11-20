@@ -73,7 +73,7 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
 .voce .t.solo span{color:var(--testo);white-space:normal}
 .voce .t.solo span.tbc{color:#78a9ff}
 .vuoto{color:var(--grigio);text-align:center;padding:14px 0;font-size:14px}
-.reso{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.reso{display:grid;grid-template-columns:1fr;gap:8px;text-align:center}
 .reso div{background:var(--carta2);border:1px solid var(--bordo);border-radius:12px;padding:12px 4px}
 .reso b{display:block;font-size:24px;color:var(--acc)}
 .reso small{color:var(--grigio);font-size:12px}
@@ -476,11 +476,11 @@ function disegnaMie(r, vecchio) {
   // resoconto del mese
   var rs = r.resoconto || { giornate: 0, ore: 0, oltre8: 0, lavori: [] };
   $('mieReso').innerHTML = '<div class="reso">' +
-    '<div><b>' + rs.giornate + '</b><small>' + (rs.giornate === 1 ? 'giornata' : 'giornate') + '</small></div>' +
-    '<div><b>' + numIt(rs.ore) + '</b><small>ore totali</small></div>' +
-    '<div><b>' + numIt(rs.oltre8) + '</b><small>ore oltre le 8</small></div></div>' +
+    '<div><b>' + rs.giornate + '</b><small>' + (rs.giornate === 1 ? 'giornata' : 'giornate') + '</small></div></div>' +
     (rs.lavori && rs.lavori.length ? '<div class="reso-lav">' + rs.lavori.map(function (l) {
-      return '<div><span>' + esc(l.lavoro) + '</span><span>' + l.giornate + (l.giornate === 1 ? ' giorno' : ' giorni') + ' · ' + numIt(l.ore) + ' h</span></div>';
+      var mans = [];   // la mansione (o le mansioni) fatte in quel lavoro
+      gg.forEach(function (g) { if (String(g.commessa || '').trim().toLowerCase() === String(l.lavoro || '').trim().toLowerCase() && g.mansione && mans.indexOf(g.mansione) < 0) mans.push(g.mansione); });
+      return '<div><span>' + esc(l.lavoro) + (mans.length ? '<small style="color:var(--grigio)"> · ' + esc(mans.join(', ')) + '</small>' : '') + '</span><span>' + l.giornate + (l.giornate === 1 ? ' giorno' : ' giorni') + ' · ' + numIt(l.ore) + ' h</span></div>';
     }).join('') + '</div>' : '');
   // prossimi lavori (dal calendario Level)
   var pr = r.prossimi || [];

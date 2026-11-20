@@ -1,5 +1,5 @@
 // Level · Giornate tecnici – fa funzionare l'app anche senza campo
-var CACHE = 'level-ore-v4';
+var CACHE = 'level-ore-v5';
 var FILE = ['./', 'index.html', 'manifest.webmanifest', 'logo.png', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILE); }).then(function () { return self.skipWaiting(); }));
