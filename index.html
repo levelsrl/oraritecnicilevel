@@ -83,6 +83,9 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
 .chi{display:flex;justify-content:space-between;align-items:center;color:var(--grigio);font-size:13px;margin-top:14px}
 .chi button{width:auto;margin:0;min-height:32px;padding:0 12px;font-size:13px;font-weight:600}
 .agg{color:var(--grigio);font-size:12px;text-align:center;margin-top:10px}
+.notif{margin:-4px 0 14px;padding:10px 12px;border-radius:12px;background:var(--carta);border:1px solid var(--bordo);font-size:14px;color:var(--grigio);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.notif button{margin:0;min-height:38px;width:auto;padding:0 16px;font-size:14px;flex-shrink:0}
+.notif.nascosto{display:none}
 </style>
 </head>
 <body>
@@ -96,6 +99,7 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
     <button type="button" id="tabSegna" class="on" role="tab">✏️ Segna giornata</button>
     <button type="button" id="tabMie" role="tab">📅 Le mie giornate</button>
   </div>
+  <div id="notif" class="notif nascosto"></div>
 
   <!-- LE MIE GIORNATE: solo le tue, legate al tuo telefono -->
   <div id="mie" class="nascosto">
@@ -260,7 +264,7 @@ function svuotaCoda() {
 window.addEventListener('online', svuotaCoda);
 
 function fatto(d, ore, inCoda, n, ultimo) {
-  mem.set('tecnico', d.tecnico); mem.set('mansione', d.mansione);
+  mem.set('tecnico', d.tecnico); mem.set('mansione', d.mansione); mostraNotif();
   ricorda('commesse', d.commessa); ricorda('locations', d.location);
   var f = function (x) { return x.split('-').reverse().join('/'); };
   var g = n > 1 ? n + ' giorni (' + f(d.data) + ' – ' + f(ultimo) + ')' : f(d.data);
@@ -490,6 +494,7 @@ function disegnaMie(r, vecchio) {
       (sotto ? '<div class="s">' + esc(sotto) + '</div>' : '') + '</div>';
   }).join('') : '<div class="vuoto">Nessun lavoro in calendario per te nei prossimi giorni.</div>';
   $('mieAgg').textContent = r.aggiornato ? 'Calendario aggiornato: ' + r.aggiornato : '';
+  mostraNotif();
   if (vecchio && r.salvato) mostraStato('Copia salvata sul telefono, aggiorno…');
 }
 
@@ -514,7 +519,51 @@ fetch(API + '?api=mansioni').then(function (r) { return r.json(); }).then(functi
   if (r && r.ok && r.mansioni && r.mansioni.length) { MANSIONI = r.mansioni; mem.set('mansioni', MANSIONI); riempiMansioni(); }
 }).catch(function () {});
 svuotaCoda();
+// ================= PROMEMORIA DELLA SERA (notifiche) – 20/11/2026 =================
+function notifNome() { var io = mem.get('io', {}) || {}; return String(io.nome || mem.get('tecnico', '') || '').trim(); }
+var NOTIF_APP = 'tecnici', NOTIF_CHIAVE = 'notif';
+function b64ToBytes(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; var r = atob(s), a = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) a[i] = r.charCodeAt(i); return a; }
+function notifSi() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+function suIphoneDaSafari() { return /iphone|ipad|ipod/i.test(navigator.userAgent) && !(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); }
+function mostraNotif() {
+  var box = $('notif'), nome = notifNome(), html = '';
+  if (!box) return;
+  if (!nome) { box.classList.add('nascosto'); return; }
+  if (suIphoneDaSafari()) html = '<span>🔔 Per avere il promemoria la sera: tocca Condividi → «Aggiungi alla schermata Home» e apri l’app da lì.</span>';
+  else if (!notifSi()) html = '';
+  else if (Notification.permission === 'denied') html = '<span>🔕 Hai bloccato le notifiche: se vuoi il promemoria, riattivale nelle impostazioni del telefono.</span>';
+  else if (Notification.permission === 'granted' && mem.get(NOTIF_CHIAVE, '') === nome) html = '<span>🔔 Promemoria della sera attivo</span>';
+  else html = '<span>🔔 Vuoi un promemoria la sera, se ti dimentichi di segnare?</span><button type="button" id="notifSi">Attiva</button>';
+  box.innerHTML = html; box.classList.toggle('nascosto', !html);
+  var b = $('notifSi'); if (b) b.addEventListener('click', attivaNotif);
+}
+function attivaNotif() {
+  var nome = notifNome(), b = $('notifSi');
+  if (b) { b.disabled = true; b.textContent = '…'; }
+  var scrivi = function (msg) { $('notif').innerHTML = '<span>' + msg + '</span>'; };
+  Notification.requestPermission().then(function (p) {
+    if (p !== 'granted') { scrivi('🔕 Va bene, niente promemoria. Se cambi idea, attivali nelle impostazioni del telefono.'); return; }
+    return Promise.all([navigator.serviceWorker.ready, fetch(API + '?api=vapid').then(function (r) { return r.json(); })])
+      .then(function (x) {
+        if (!x[1] || !x[1].key) throw new Error('chiave');
+        return x[0].pushManager.getSubscription().then(function (s) {
+          return s || x[0].pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(x[1].key) });
+        });
+      })
+      .then(function (s) {
+        var j = s.toJSON();
+        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ api: 'notifiche', app: NOTIF_APP, nome: nome, tel: idTelefono(), sub: { endpoint: j.endpoint, keys: j.keys } }) })
+          .then(function (r) { return r.json(); });
+      })
+      .then(function (r) {
+        if (!r || !r.ok) { scrivi('⚠️ ' + ((r && r.errore) || 'Non riesco ad attivarlo, riprova.')); return; }
+        mem.set(NOTIF_CHIAVE, nome); mostraNotif();
+      });
+  }).catch(function () { scrivi('⚠️ Non riesco ad attivarlo adesso, riprova più tardi.'); });
+}
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+mostraNotif();
 </script>
 </body>
 </html>
