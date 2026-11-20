@@ -228,13 +228,14 @@ $('f').addEventListener('submit', function (ev) {
   if (!d.compenso) manca.push('compenso');
   if (manca.length) { $('err').textContent = 'Manca: ' + manca.join(', '); return; }
   $('err').textContent = '';
+  chiediNotifAlPrimoInvio(d.nome);
   $('invia').disabled = true; $('invia').textContent = 'Invio…';
   fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(d) })
     .then(function (r) { return r.json(); })
     .then(function (r) {
       $('invia').disabled = false; $('invia').textContent = 'Invia giornata';
       if (!r || !r.ok) { $('err').textContent = (r && r.errore) || 'Errore, riprova.'; return; }
-      mem.set('nome', d.nome); mem.set('societa', d.societa); mostraNotif();
+      mem.set('nome', d.nome); mem.set('societa', d.societa); notifDopoInvio(d.nome);
       ricorda('societaL', d.societa); ricorda('eventi', d.evento); ricorda('locations', d.location);
       d.ragazzi.forEach(function (n) { ricorda('ragazziL', n); });
       $('riassunto').textContent = dataBella(d.data) + ' · ' + d.location + ' · ' + r.ragazzi + (r.ragazzi === 1 ? ' ragazzo' : ' ragazzi') +
@@ -309,30 +310,54 @@ function mostraNotif() {
   box.innerHTML = html; box.classList.toggle('nascosto', !html);
   var b = $('notifSi'); if (b) b.addEventListener('click', attivaNotif);
 }
+function iscriviNotif(nome) {
+  return Promise.all([navigator.serviceWorker.ready, fetch(API + '?api=vapid').then(function (r) { return r.json(); })])
+    .then(function (x) {
+      if (!x[1] || !x[1].key) throw new Error('chiave');
+      return x[0].pushManager.getSubscription().then(function (s) {
+        return s || x[0].pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(x[1].key) });
+      });
+    })
+    .then(function (s) {
+      var j = s.toJSON();
+      return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ api: 'notifiche', app: NOTIF_APP, nome: nome, tel: idTelefono(), sub: { endpoint: j.endpoint, keys: j.keys } }) })
+        .then(function (r) { return r.json(); });
+    })
+    .then(function (r) { if (r && r.ok) mem.set(NOTIF_CHIAVE, nome); return r; });
+}
 function attivaNotif() {
   var nome = notifNome(), b = $('notifSi');
   if (b) { b.disabled = true; b.textContent = '…'; }
   var scrivi = function (msg) { $('notif').innerHTML = '<span>' + msg + '</span>'; };
   Notification.requestPermission().then(function (p) {
     if (p !== 'granted') { scrivi('🔕 Va bene, niente promemoria. Se cambi idea, attivali nelle impostazioni del telefono.'); return; }
-    return Promise.all([navigator.serviceWorker.ready, fetch(API + '?api=vapid').then(function (r) { return r.json(); })])
-      .then(function (x) {
-        if (!x[1] || !x[1].key) throw new Error('chiave');
-        return x[0].pushManager.getSubscription().then(function (s) {
-          return s || x[0].pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(x[1].key) });
-        });
-      })
-      .then(function (s) {
-        var j = s.toJSON();
-        return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ api: 'notifiche', app: NOTIF_APP, nome: nome, tel: idTelefono(), sub: { endpoint: j.endpoint, keys: j.keys } }) })
-          .then(function (r) { return r.json(); });
-      })
-      .then(function (r) {
-        if (!r || !r.ok) { scrivi('⚠️ ' + ((r && r.errore) || 'Non riesco ad attivarlo, riprova.')); return; }
-        mem.set(NOTIF_CHIAVE, nome); mostraNotif();
-      });
+    return iscriviNotif(nome).then(function (r) {
+      if (!r || !r.ok) { scrivi('⚠️ ' + ((r && r.errore) || 'Non riesco ad attivarlo, riprova.')); return; }
+      mostraNotif();
+    });
   }).catch(function () { scrivi('⚠️ Non riesco ad attivarlo adesso, riprova più tardi.'); });
+}
+// al primo «Invia» il telefono chiede da solo il permesso (un tocco su «Consenti»); se dice no, non lo richiediamo
+function chiediNotifAlPrimoInvio(nome) {
+  if (!notifSi() || suIphoneDaSafari() || Notification.permission !== 'default' || mem.get('notifChiesto', false)) return;
+  mem.set('notifChiesto', true);
+  var prova = function (n) {
+    iscriviNotif(nome).then(function (r) {
+      if (r && r.ok) mostraNotif(); else if (n < 3) setTimeout(function () { prova(n + 1); }, 5000);
+    }).catch(function () { if (n < 3) setTimeout(function () { prova(n + 1); }, 5000); });
+  };
+  try {
+    Promise.resolve(Notification.requestPermission()).then(function (p) {
+      if (p === 'granted') setTimeout(function () { prova(1); }, 3000); else mostraNotif();
+    });
+  } catch (e) {}
+}
+// dopo un invio: se le notifiche sono già permesse ma non collegate a questo nome, le collego
+function notifDopoInvio(nome) {
+  if (notifSi() && Notification.permission === 'granted' && nome && mem.get(NOTIF_CHIAVE, '') !== nome)
+    iscriviNotif(nome).then(mostraNotif, mostraNotif);
+  else mostraNotif();
 }
 preparaForm();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
