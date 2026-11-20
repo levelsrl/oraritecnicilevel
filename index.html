@@ -86,6 +86,19 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
 .notif{margin:-4px 0 14px;padding:10px 12px;border-radius:12px;background:var(--carta);border:1px solid var(--bordo);font-size:14px;color:var(--grigio);display:flex;align-items:center;justify-content:space-between;gap:10px}
 .notif button{margin:0;min-height:38px;width:auto;padding:0 16px;font-size:14px;flex-shrink:0}
 .notif.nascosto{display:none}
+/* 20/11/2026: tre schede in alto, la scheda di oggi/domani, i guasti */
+.schede{grid-template-columns:1fr 1fr 1fr}
+.schede button{font-size:14px;padding:0 4px}
+.sk{margin-bottom:14px;border-color:rgba(246,152,29,.45)}
+.sk .sez:first-child{margin-top:0}
+.sk-l{padding:10px 0;border-top:1px solid var(--bordo)}
+.sk .sez+.sk-l{border-top:0;padding-top:2px}
+.sk-l h4{margin:0 0 4px;font-size:17px}
+.sk-l .r{color:var(--grigio);font-size:14px;margin-top:4px;overflow-wrap:anywhere}
+.sk-l a{color:var(--acc2);text-decoration:none;font-weight:600}
+.sk-l .tbc{color:#78a9ff;font-size:12px;font-weight:700;margin-left:6px}
+.foto-mini{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.foto-mini img{width:76px;height:76px;object-fit:cover;border-radius:10px;border:1px solid var(--bordo);cursor:pointer}
 </style>
 </head>
 <body>
@@ -96,8 +109,9 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
   </header>
 
   <div class="schede" role="tablist">
-    <button type="button" id="tabSegna" class="on" role="tab">✏️ Segna giornata</button>
-    <button type="button" id="tabMie" role="tab">📅 Le mie giornate</button>
+    <button type="button" id="tabSegna" class="on" role="tab">✏️ Segna</button>
+    <button type="button" id="tabMie" role="tab">📅 Le mie</button>
+    <button type="button" id="tabGuasto" role="tab">🔧 Guasto</button>
   </div>
   <div id="notif" class="notif nascosto"></div>
 
@@ -133,7 +147,35 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
     </div>
   </div>
 
+  <!-- GUASTO: segnala il materiale rotto (20/11/2026) -->
+  <div id="guasto" class="nascosto">
+    <form id="fg" class="card" novalidate>
+      <label for="gNome">Nome e cognome <b>*</b></label>
+      <input id="gNome" autocomplete="name" placeholder="Es. Mario Rossi">
+      <label for="gCosa">Cosa si è rotto <b>*</b></label>
+      <input id="gCosa" maxlength="120" placeholder="Es. cavo DMX 10 m, faro n. 3">
+      <label for="gNote">Cosa è successo</label>
+      <textarea id="gNote" maxlength="500" placeholder="Es. non si accende, connettore rotto, schiacciato dal carrello…"></textarea>
+      <label for="gLavoro">Lavoro</label>
+      <input id="gLavoro" list="commesse" maxlength="120" placeholder="Es. Action">
+      <label>Foto (fino a 3)</label>
+      <input id="gFoto" type="file" accept="image/*" multiple class="nascosto">
+      <button type="button" id="gFotoBtn" class="sec" style="margin-top:0">📷 Aggiungi foto</button>
+      <div id="gAnteprime" class="foto-mini"></div>
+      <div id="gAiutoFoto" class="aiuto nascosto">Tocca una foto per toglierla.</div>
+      <button id="gInvia" type="submit">Segnala guasto</button>
+      <div id="gErr" class="err"></div>
+    </form>
+    <div id="gFatto" class="card ok nascosto">
+      <div class="spunta">✓</div>
+      <h2>Guasto segnalato</h2>
+      <p>Grazie! Giorgio lo vede subito.</p>
+      <button id="gAltro" class="sec" type="button">Segnala un altro guasto</button>
+    </div>
+  </div>
+
   <div id="segna">
+  <div id="schedaBox" class="nascosto"></div>
   <form id="f" class="card" autocomplete="on" novalidate>
     <label for="tecnico">Nome e cognome <b>*</b></label>
     <input id="tecnico" name="tecnico" required autocomplete="name" placeholder="Es. Mario Rossi">
@@ -265,6 +307,7 @@ window.addEventListener('online', svuotaCoda);
 
 function fatto(d, ore, inCoda, n, ultimo) {
   mem.set('tecnico', d.tecnico); mem.set('mansione', d.mansione); notifDopoInvio(d.tecnico);
+  if (!inCoda) { mem.set('inviatoOk', d.tecnico); caricaScheda(); }
   ricorda('commesse', d.commessa); ricorda('locations', d.location);
   var f = function (x) { return x.split('-').reverse().join('/'); };
   var g = n > 1 ? n + ' giorni (' + f(d.data) + ' – ' + f(ultimo) + ')' : f(d.data);
@@ -400,14 +443,17 @@ function meseAdd(m, n) { var p = m.split('-'), d = new Date(Date.UTC(+p[0], +p[1
 function dataBella(iso) { var p = iso.split('-'), wd = GIORNI_N[new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay()]; return wd + ' ' + +p[2] + '/' + p[1]; }
 
 function scheda(quale) {
-  var mie = quale === 'mie';
-  $('tabSegna').classList.toggle('on', !mie); $('tabMie').classList.toggle('on', mie);
-  $('segna').classList.toggle('nascosto', mie); $('mie').classList.toggle('nascosto', !mie);
+  var mie = quale === 'mie', gu = quale === 'guasto', se = !mie && !gu;
+  $('tabSegna').classList.toggle('on', se); $('tabMie').classList.toggle('on', mie); $('tabGuasto').classList.toggle('on', gu);
+  $('segna').classList.toggle('nascosto', !se); $('mie').classList.toggle('nascosto', !mie); $('guasto').classList.toggle('nascosto', !gu);
   if (mie) apriMie();
+  if (se) caricaScheda();
+  if (gu && !$('gNome').value) $('gNome').value = notifNome();
   window.scrollTo(0, 0);
 }
 $('tabSegna').addEventListener('click', function () { scheda('segna'); });
 $('tabMie').addEventListener('click', function () { scheda('mie'); });
+$('tabGuasto').addEventListener('click', function () { scheda('guasto'); });
 
 // il "documento" di questo telefono: un numero a caso creato la prima volta, che resta qui
 function idTelefono() {
@@ -492,7 +538,9 @@ function disegnaMie(r, vecchio) {
   $('mieProssimi').innerHTML = pr.length ? pr.map(function (p) {
     var sotto = [p.mansione, p.dove, p.orario, p.cosa].filter(Boolean).join(' · ');
     return '<div class="voce"><div class="t solo"><span>' + esc(dataBella(p.giorno)) + ' · ' + esc(p.lavoro) + (p.tbc ? '<span class="tbc">DA CONFERMARE</span>' : '') + '</span></div>' +
-      (sotto ? '<div class="s">' + esc(sotto) + '</div>' : '') + '</div>';
+      (sotto ? '<div class="s">' + esc(sotto) + '</div>' : '') +
+      (p.indirizzo ? '<div class="s"><a href="' + esc(mapsLink(p.indirizzo)) + '" target="_blank" rel="noopener" style="color:var(--acc2);text-decoration:none;font-weight:600">📍 Apri in Maps</a></div>' : '') +
+      (p.squadra ? '<div class="s">👥 ' + esc(p.squadra) + '</div>' : '') + '</div>';
   }).join('') : '<div class="vuoto">Nessun lavoro in calendario per te nei prossimi giorni.</div>';
   $('mieAgg').textContent = r.aggiornato ? 'Calendario aggiornato: ' + r.aggiornato : '';
   mostraNotif();
@@ -587,8 +635,110 @@ function notifDopoInvio(nome) {
     iscriviNotif(nome).then(mostraNotif, mostraNotif);
   else mostraNotif();
 }
+// ================= SCHEDA DI OGGI E DOMANI (dal calendario Level) – 20/11/2026 =================
+function mapsLink(ind) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ind); }
+function nomeScheda() {
+  var io = mem.get('io', {}) || {};
+  return String(io.nome || mem.get('inviatoOk', '') || (mem.get('coda', []).length ? '' : mem.get('tecnico', '')) || '').trim();
+}
+function schedaLavoro(p) {
+  var t = '<div class="sk-l"><h4>' + esc(p.lavoro || 'Lavoro') + (p.tbc ? '<span class="tbc">DA CONFERMARE</span>' : '') + '</h4>';
+  var m = /non indicata/i.test(p.mansione || '') ? '' : p.mansione;
+  var quando = [p.cosa, p.orario].filter(Boolean).join(' · ');
+  var ind = p.indirizzo || p.dove;
+  if (m) t += '<div class="r">🎛️ ' + esc(m) + '</div>';
+  if (quando) t += '<div class="r">🕗 ' + esc(quando) + '</div>';
+  if (ind) t += '<div class="r">📍 <a href="' + esc(mapsLink(ind)) + '" target="_blank" rel="noopener">' + esc(String(ind).replace(/, Italia$/, '')) + '</a></div>';
+  if (p.squadra) t += '<div class="r">👥 ' + esc(p.squadra) + '</div>';
+  if (p.note) t += '<div class="r">📝 ' + esc(p.note) + '</div>';
+  return t + '</div>';
+}
+function disegnaScheda(r) {
+  var box = $('schedaBox');
+  var righe = (r && r.righe) || [], html = '';
+  [[oggi(), 'Oggi'], [isoAdd(oggi(), 1), 'Domani']].forEach(function (c) {
+    var rr = righe.filter(function (x) { return x.giorno === c[0]; });
+    if (rr.length) html += '<div class="sez">📋 ' + c[1] + ' · ' + esc(dataBella(c[0])) + '</div>' + rr.map(schedaLavoro).join('');
+  });
+  if (!html) { box.classList.add('nascosto'); box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="card sk">' + html + (r.aggiornato ? '<div class="agg">Dal calendario Level · aggiornato ' + esc(r.aggiornato) + '</div>' : '') + '</div>';
+  box.classList.remove('nascosto');
+}
+function caricaScheda() {
+  var nome = nomeScheda(), v = mem.get('scheda', null);
+  if (v && v.nome === nome) disegnaScheda(v); else disegnaScheda(null);     // prima la copia sul telefono, poi aggiorno
+  if (!nome || !navigator.onLine) return;
+  fetch(API + '?api=domani&nome=' + encodeURIComponent(nome) + '&tel=' + encodeURIComponent(idTelefono()))
+    .then(function (r) { return r.json(); }).then(function (r) {
+      if (!r || !r.ok) { if (r && /collegato|non trovato/i.test(r.errore || '')) { mem.set('scheda', null); disegnaScheda(null); } return; }
+      r.nome = nome; mem.set('scheda', r); disegnaScheda(r);
+    }).catch(function () {});
+}
+
+// ================= GUASTI: foto + due parole, li vede subito Giorgio – 20/11/2026 =================
+var G_FOTO = [];
+function rimpicciolisci(file) {
+  return new Promise(function (ok, no) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var w = img.naturalWidth, h = img.naturalHeight, s = Math.min(1, 1280 / Math.max(w, h));
+      var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      var q = 0.72, d = c.toDataURL('image/jpeg', q);
+      while (d.length > 900000 && q > 0.35) { q -= 0.12; d = c.toDataURL('image/jpeg', q); }
+      if (d.indexOf('data:image/jpeg;base64,') !== 0) { no(new Error('formato')); return; }
+      ok(d);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); no(new Error('foto')); };
+    img.src = url;
+  });
+}
+function disegnaAnteprime() {
+  $('gAnteprime').innerHTML = G_FOTO.map(function (d, i) { return '<img src="' + d + '" data-i="' + i + '" alt="Foto ' + (i + 1) + '">'; }).join('');
+  $('gFotoBtn').disabled = G_FOTO.length >= 3;
+  $('gFotoBtn').textContent = G_FOTO.length >= 3 ? '📷 Massimo 3 foto' : (G_FOTO.length ? '📷 Aggiungi un’altra foto' : '📷 Aggiungi foto');
+  $('gAiutoFoto').classList.toggle('nascosto', !G_FOTO.length);
+}
+$('gFotoBtn').addEventListener('click', function () { $('gFoto').click(); });
+$('gFoto').addEventListener('change', function () {
+  var files = Array.prototype.slice.call(this.files || [], 0, Math.max(0, 3 - G_FOTO.length));
+  this.value = '';
+  if (!files.length) return;
+  $('gErr').textContent = 'Preparo le foto…';
+  Promise.all(files.map(function (f) { return rimpicciolisci(f).catch(function () { return null; }); })).then(function (dd) {
+    dd.forEach(function (d) { if (d && G_FOTO.length < 3) G_FOTO.push(d); });
+    $('gErr').textContent = dd.some(function (d) { return !d; }) ? 'Una foto non si apre: riprova con un’altra.' : '';
+    disegnaAnteprime();
+  });
+});
+$('gAnteprime').addEventListener('click', function (e) {
+  if (e.target.tagName !== 'IMG') return;
+  G_FOTO.splice(+e.target.dataset.i, 1); disegnaAnteprime();
+});
+$('fg').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var d = { api: 'guasto', nome: $('gNome').value.trim(), cosa: $('gCosa').value.trim(), note: $('gNote').value.trim(),
+            lavoro: $('gLavoro').value.trim(), foto: G_FOTO.slice(0, 3), tel: idTelefono() };
+  if (!d.nome) { $('gErr').textContent = 'Scrivi il tuo nome e cognome.'; return; }
+  if (!d.cosa) { $('gErr').textContent = 'Scrivi cosa si è rotto.'; return; }
+  if (!navigator.onLine) { $('gErr').textContent = 'Serve la rete: riprova quando c’è campo (quello che hai scritto resta qui).'; return; }
+  var pronto = function () { $('gInvia').disabled = false; $('gInvia').textContent = 'Segnala guasto'; };
+  $('gErr').textContent = ''; $('gInvia').disabled = true; $('gInvia').textContent = 'Invio…';
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(d) })
+    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      pronto();
+      if (!r || !r.ok) { $('gErr').textContent = (r && r.errore) || 'Errore, riprova.'; return; }
+      G_FOTO = []; $('gCosa').value = ''; $('gNote').value = ''; disegnaAnteprime();
+      $('fg').classList.add('nascosto'); $('gFatto').classList.remove('nascosto'); window.scrollTo(0, 0);
+    }).catch(function () { pronto(); $('gErr').textContent = 'Invio non riuscito: controlla la rete e riprova.'; });
+});
+$('gAltro').addEventListener('click', function () { $('gFatto').classList.add('nascosto'); $('fg').classList.remove('nascosto'); });
+
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 mostraNotif();
+caricaScheda();
 </script>
 </body>
 </html>
