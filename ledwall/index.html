@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Level · Ledwall</title>
+<meta name="theme-color" content="#0a0b0e">
+<style>
+:root{--acc:#f6981d;--acc2:#ffb347;--testo:#edeff3;--grigio:#9298a4;--bordo:#2d323d;--sfondo:#0a0b0e;--carta:#15171c;--carta2:#1b1e25;--ok:#52c79a;--rosso:#ff6b6b;--blu:#78a9ff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--sfondo);color:var(--testo);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:560px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom))}
+header{text-align:center;margin-bottom:14px}
+header img{height:42px}
+header .logo-t{font-size:30px;font-weight:800;letter-spacing:.3em}
+header p{margin:6px 0 0;color:var(--grigio);font-size:13px;letter-spacing:.05em;text-transform:uppercase}
+.card{background:var(--carta);border:1px solid var(--bordo);border-radius:16px;padding:16px;margin-bottom:14px}
+.sez{margin:0 0 10px;font-size:13px;color:var(--grigio);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+label{display:block;font-size:13px;color:var(--grigio);margin:12px 0 5px;font-weight:600}
+input,select,textarea{width:100%;font:inherit;color:var(--testo);background:var(--carta2);border:1px solid var(--bordo);border-radius:10px;padding:10px 11px;min-height:44px;outline:none;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--grigio) 50%),linear-gradient(135deg,var(--grigio) 50%,transparent 50%);background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+input:focus,select:focus{border-color:var(--acc)}
+input[type=date]{color-scheme:dark}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.aiuto{color:var(--grigio);font-size:12px;margin-top:4px}
+button{width:100%;margin-top:12px;min-height:48px;border:0;border-radius:12px;background:var(--acc);color:#111;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+button.sec{background:transparent;color:var(--testo);border:1px solid var(--bordo)}
+.esito{border-radius:12px;padding:12px;margin-bottom:10px;font-size:15px}
+.esito.si{background:rgba(82,199,154,.12);border:1px solid rgba(82,199,154,.45)}
+.esito.no{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.5)}
+.esito b{display:block;margin-bottom:4px}
+.esito ul{margin:6px 0 0;padding-left:18px;color:var(--testo)}
+.esito li{margin:2px 0}
+.num{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.num div{background:var(--carta2);border:1px solid var(--bordo);border-radius:12px;padding:10px;text-align:center}
+.num b{display:block;font-size:20px;color:var(--acc)}
+.num small{color:var(--grigio);font-size:12px}
+.disegno{overflow-x:auto;background:#0d0f13;border:1px solid var(--bordo);border-radius:12px;padding:8px}
+.disegno svg{display:block;margin:0 auto}
+.leg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:12px;color:var(--grigio)}
+.leg span i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.lista{font-size:15px}
+.lista div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--bordo)}
+.lista div:first-child{border-top:0}
+.lista div span:last-child{font-weight:700;color:var(--acc2);white-space:nowrap}
+details{margin-top:4px}
+details summary{cursor:pointer;color:var(--grigio);font-size:14px;font-weight:600;padding:6px 0}
+.tit{font-size:20px;font-weight:700;margin:0}
+.sotto{color:var(--grigio);font-size:14px;margin-top:2px}
+.avviso{color:var(--acc2);font-size:13px;margin-top:6px}
+.nascosto{display:none!important}
+footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:16px}
+@media print{
+  body{background:#fff;color:#111}
+  .card{background:#fff;border-color:#bbb;break-inside:avoid}
+  .noprint{display:none!important}
+  .disegno{background:#fff}
+  .num div{background:#fff}
+  .lista div span:last-child{color:#111}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="../logo.png" alt="Level" onerror="this.outerHTML='<div class=&quot;logo-t&quot;>LEVEL</div>'">
+    <p>Ledwall · come si monta</p>
+  </header>
+
+  <!-- intestazione del lavoro (si vede sempre) -->
+  <div class="card" id="testa">
+    <p class="tit" id="tLavoro">Nuovo ledwall</p>
+    <div class="sotto" id="tSotto"></div>
+  </div>
+
+  <!-- MODULO (ufficio) -->
+  <form id="modulo" class="card noprint" novalidate>
+    <div class="sez">Il lavoro</div>
+    <label for="lavoro">Lavoro / evento</label>
+    <input id="lavoro" placeholder="Es. Bancomat – sala plenaria" maxlength="80">
+    <div class="r2">
+      <div><label for="data">Giorno</label><input id="data" type="date"></div>
+      <div><label for="luogo">Location</label><input id="luogo" placeholder="Es. Via Seprio 2, Milano" maxlength="120"></div>
+    </div>
+
+    <div class="sez" style="margin-top:18px">Il ledwall</div>
+    <div class="r3">
+      <div><label for="passo">Passo</label><select id="passo"><option value="P1.9">P1.9</option><option value="P2.6">P2.6</option></select></div>
+      <div><label for="larg">Largo (m)</label><input id="larg" type="number" inputmode="decimal" min="0.5" step="0.5" value="8"></div>
+      <div><label for="alto">Alto (m)</label><input id="alto" type="number" inputmode="decimal" min="0.5" step="0.5" value="3"></div>
+    </div>
+    <div class="aiuto">Cabinet 50×50 cm: le misure vanno a mezzi metri.</div>
+
+    <div class="r2">
+      <div><label for="centr">Centralina</label><select id="centr"></select></div>
+      <div><label for="sorg">Segnale in ingresso</label><select id="sorg">
+        <option value="hd60">Full HD 1080p 60 Hz</option>
+        <option value="uhd30">4K (3840×2160) 30 Hz</option>
+        <option value="uhd60" selected>4K (3840×2160) 60 Hz</option>
+        <option value="dci60">4K DCI (4096×2160) 60 Hz</option>
+        <option value="nativo">Pixel per pixel (risoluzione del ledwall)</option>
+      </select></div>
+    </div>
+    <div class="r2">
+      <div><label for="ncentr">Quante centraline</label><select id="ncentr">
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+      </select></div>
+      <div><label for="backup">Backup del segnale</label><select id="backup">
+        <option value="no">Nessun backup</option>
+        <option value="porte">Sulle porte libere della stessa centralina</option>
+        <option value="centralina" selected>Su una centralina di riserva uguale</option>
+      </select></div>
+    </div>
+    <div class="aiuto">Backup: il cavo main entra nel primo cabinet di ogni catena, il cavo backup nell'ultimo.</div>
+
+    <div class="sez" style="margin-top:18px">Montaggio</div>
+    <div class="r2">
+      <div><label for="mont">Come</label><select id="mont">
+        <option value="terra">Appoggiato a terra</option>
+        <option value="sbalzo">A sbalzo (appeso alle B-Lite)</option>
+      </select></div>
+      <div><label for="quota">Da terra (m)</label><input id="quota" type="number" inputmode="decimal" min="0" step="0.1" value="0"></div>
+    </div>
+    <div class="aiuto" id="aiutoQuota">A terra: lo spessore sotto (es. 0,4). A sbalzo: dove sta il bordo basso (es. 2, 2,5, 3).</div>
+    <div class="r2">
+      <div><label for="blite">B-Lite ogni</label><select id="blite">
+        <option value="0.5">0,5 m</option><option value="1" selected>1 m</option><option value="1.5">1,5 m</option><option value="2">2 m</option><option value="0">Nessuna B-Lite</option>
+      </select></div>
+      <div><label for="zav">Zavorre per base</label><select id="zav">
+        <option value="0">Nessuna</option><option value="1">1 (30 kg)</option><option value="2" selected>2 (60 kg)</option><option value="3">3 (90 kg)</option><option value="4">4 (120 kg)</option><option value="5">5 (150 kg)</option><option value="6">6 (180 kg)</option>
+      </select></div>
+    </div>
+
+    <div class="sez" style="margin-top:18px">Cablaggio</div>
+    <div class="r2">
+      <div><label for="dir">Cavi lungo</label><select id="dir"><option value="v">Le colonne (dal basso in su)</option><option value="o">Le righe (dal basso)</option></select></div>
+      <div><label for="inizio">Parte da</label><select id="inizio"><option value="bs">Basso a sinistra</option><option value="bd">Basso a destra</option></select></div>
+    </div>
+    <div class="aiuto">Visto da davanti.</div>
+    <label for="linea">Corrente sul posto</label>
+    <select id="linea">
+      <option value="16m">16 A monofase · 1 presa 16 A</option>
+      <option value="32m">32 A monofase · 2 prese 16 A</option>
+      <option value="16t">16 A trifase · 3 prese 16 A</option>
+      <option value="32t" selected>32 A trifase · quadro con 6 prese 16 A</option>
+      <option value="63t">63 A trifase · quadro con 12 prese 16 A</option>
+    </select>
+    <label for="libere">Prese 16 A da lasciare libere (audio, luci…)</label>
+    <select id="libere">
+      <option value="0" selected>Nessuna: tutto il quadro al ledwall</option>
+      <option value="1">1 presa libera</option>
+      <option value="2">2 prese libere</option>
+      <option value="3">3 prese libere</option>
+      <option value="4">4 prese libere</option>
+    </select>
+    <div class="aiuto">La pagina carica di più le altre linee (fino a 18 cabinet = 2,7 kW) per liberare le prese che ti servono.</div>
+    <label for="note">Note per i tecnici</label>
+    <textarea id="note" rows="2" maxlength="400" placeholder="Es. accesso carico da via…, referente…"></textarea>
+
+    <details id="impost">
+      <summary>⚙️ Impostazioni (cabinet, catene, zavorre)</summary>
+      <div class="r2">
+        <div><label for="w19">Watt P1.9 (picco)</label><input id="w19" type="number" min="1" value="150"></div>
+        <div><label for="w26">Watt P2.6 (picco)</label><input id="w26" type="number" min="1" value="150"></div>
+      </div>
+      <div class="r2">
+        <div><label for="kg19">Peso P1.9 (kg)</label><input id="kg19" type="number" min="0" step="0.1" placeholder="da inserire"></div>
+        <div><label for="kg26">Peso P2.6 (kg)</label><input id="kg26" type="number" min="0" step="0.1" placeholder="da inserire"></div>
+      </div>
+      <div class="r2">
+        <div><label for="catena">Max cabinet per linea 16 A</label><input id="catena" type="number" min="1" value="18"></div>
+        <div><label for="kgzav">Peso zavorra (kg)</label><input id="kgzav" type="number" min="1" value="30"></div>
+      </div>
+      <div class="r2">
+        <div><label for="prese">Prese 16 A sul quadro</label><input id="prese" type="number" min="1" placeholder="6"></div>
+        <div></div>
+      </div>
+      <div class="aiuto">Ogni linea è una presa 16 A del quadro: al massimo 3 kW (18 cabinet da 150 W = 2,7 kW). Prese sul quadro: se lasci vuoto usa 1 / 2 / 3 / 6 / 12 secondo la corrente scelta.</div>
+    </details>
+
+    <button type="button" id="condividi">📤 Link per i tecnici</button>
+    <div class="aiuto" id="condOk" style="text-align:center"></div>
+  </form>
+
+  <!-- RISULTATI -->
+  <div class="card"><div class="sez">La centralina va bene?</div><div id="esito"></div><div class="num" id="numeri"></div></div>
+
+  <div class="card"><div class="sez">Fronte · segnale (porte della centralina)</div>
+    <div class="disegno" id="dSegnale"></div><div class="leg" id="lSegnale"></div></div>
+
+  <div class="card"><div class="sez">Fronte · corrente</div>
+    <div class="disegno" id="dCorrente"></div><div class="leg" id="lCorrente"></div></div>
+
+  <div class="card"><div class="sez">Retro · B-Lite e zavorre</div>
+    <div class="disegno" id="dRetro"></div><div class="aiuto" id="aRetro"></div></div>
+
+  <div class="card"><div class="sez">Materiale</div><div class="lista" id="materiale"></div>
+    <div class="avviso" id="avvMat"></div></div>
+
+  <div class="card nascosto" id="cNote"><div class="sez">Note</div><div id="tNote" style="white-space:pre-wrap"></div></div>
+
+  <button class="sec noprint" type="button" id="stampa">🖨 Salva in PDF / stampa</button>
+  <footer>Level Srl · audio video eventi · i calcoli seguono le schede NovaStar: in caso di dubbio vale la scheda del produttore.</footer>
+</div>
+
+<script>
+// ===================== DATI (schede tecniche NovaStar) =====================
+var PORTA = 650000;          // pixel per porta di rete a 8 bit
+var CENTRALINE = {
+  vx400pro:  { nome: 'VX400 Pro',  porte: 4,  max: 2600000,  w: 10240, h: 8192, ingressi: ['hdmi20', 'hdmi13', 'sdi3g'] },
+  vx1000:    { nome: 'VX1000',     porte: 10, max: 6500000,  w: 10240, h: 8192, ingressi: ['hdmi14', 'sdi3g'] },
+  vx1000pro: { nome: 'VX1000 Pro', porte: 10, max: 6500000,  w: 10240, h: 8192, ingressi: ['hdmi20', 'hdmi13', 'sdi3g'] },
+  vx2000pro: { nome: 'VX2000 Pro', porte: 20, max: 13000000, w: 16384, h: 8192, ingressi: ['hdmi20', 'dp12', 'sdi12g', 'hdmi13'] }
+};
+var ORDINE = ['vx400pro', 'vx1000', 'vx1000pro', 'vx2000pro'];   // dalla più piccola alla più grande
+// cosa accetta ogni ingresso
+var INGRESSI = {
+  hdmi20: { nome: 'HDMI 2.0', ok: function (s) { return s.hz <= 60 && s.w * s.h <= 4096 * 2160 && s.w <= 8192 && s.h <= 8188; } },
+  dp12:   { nome: 'DP 1.2',   ok: function (s) { return s.hz <= 60 && s.w * s.h <= 4096 * 2160 && s.w <= 8192 && s.h <= 8188; } },
+  sdi12g: { nome: '12G-SDI',  ok: function (s) { return !s.nativo && s.hz <= 60 && s.w <= 4096 && s.h <= 2160; } },
+  hdmi14: { nome: 'HDMI 1.4 / DVI', ok: function (s) {
+    if (s.hz <= 30 && s.w <= 3840 && s.h <= 2160) return true;
+    return s.hz <= 60 && s.w * s.h <= 3840 * 1080 && s.w <= 4092 && s.h <= 3981; } },
+  hdmi13: { nome: 'HDMI 1.3', ok: function (s) { return s.hz <= 60 && s.w * s.h <= 2048 * 1080 && s.w <= 2048 && s.h <= 2048; } },
+  sdi3g:  { nome: '3G-SDI',   ok: function (s) { return !s.nativo && s.hz <= 60 && s.w <= 1920 && s.h <= 1080; } }
+};
+var SORGENTI = {
+  hd60:  { w: 1920, h: 1080, hz: 60, nome: 'Full HD 60 Hz' },
+  uhd30: { w: 3840, h: 2160, hz: 30, nome: '4K 30 Hz' },
+  uhd60: { w: 3840, h: 2160, hz: 60, nome: '4K 60 Hz' },
+  dci60: { w: 4096, h: 2160, hz: 60, nome: '4K DCI 60 Hz' }
+};
+var CABINET = { 'P1.9': { px: 256 }, 'P2.6': { px: 192 } };
+var LINEE = {
+  '16m': { fasi: 1, a: 16, prese: 1, nome: '16 A monofase' }, '32m': { fasi: 1, a: 32, prese: 2, nome: '32 A monofase' },
+  '16t': { fasi: 3, a: 16, prese: 3, nome: '16 A trifase' }, '32t': { fasi: 3, a: 32, prese: 6, nome: '32 A trifase' }, '63t': { fasi: 3, a: 63, prese: 12, nome: '63 A trifase' }
+};
+var COL_PORTE = ['#f6981d', '#52c79a', '#78a9ff', '#ff6b6b', '#c58cff', '#ffd84d', '#4fd1d9', '#ff8fc7', '#a3e635', '#fb923c',
+                 '#60a5fa', '#f472b6', '#34d399', '#facc15', '#a78bfa', '#f87171', '#2dd4bf', '#fdba74', '#93c5fd', '#d9f99d'];
+var COL_FASI = { L1: '#a0603a', L2: '#4b4f58', L3: '#9aa0aa' };   // marrone, nero (grigio scuro), grigio
+
+// ===================== utilità =====================
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function n(x, d) { return Number(x || 0).toLocaleString('it-IT', { maximumFractionDigits: d == null ? 0 : d }); }
+function mln(x) { return (x / 1e6).toLocaleString('it-IT', { maximumFractionDigits: 2 }) + ' mln'; }
+var CAMPI = ['lavoro', 'data', 'luogo', 'passo', 'larg', 'alto', 'centr', 'ncentr', 'backup', 'sorg', 'mont', 'quota', 'blite', 'zav', 'dir', 'inizio', 'linea', 'prese', 'libere', 'note',
+             'w19', 'w26', 'kg19', 'kg26', 'catena', 'kgzav'];
+var TECNICO = false;
+
+(function () {
+  var s = $('centr');
+  s.innerHTML = ORDINE.map(function (k) { return '<option value="' + k + '">' + CENTRALINE[k].nome + '</option>'; }).join('');
+  s.value = 'vx1000pro';
+})();
+
+function leggi() {
+  var v = {};
+  CAMPI.forEach(function (k) { v[k] = $(k).value; });
+  return v;
+}
+
+// CATENE comode da montare: ogni catena prende colonne intere (o righe intere) e parte SEMPRE dal basso.
+// Con un numero pari di colonne la catena sale e riscende: entrata e uscita restano in basso.
+function catene(cols, rows, dir, inizio, cap, livello) {
+  var vert = dir === 'v', linee = vert ? cols : rows, lung = vert ? rows : cols, out = [];
+  var cella = function (l, pos) {                       // l = colonna (o riga) dal lato di partenza, pos = dal basso (o dal lato)
+    if (vert) return [inizio === 'bd' ? cols - 1 - l : l, pos];
+    return [inizio === 'bd' ? cols - 1 - pos : pos, l];
+  };
+  if (livello === 2) {                                  // ultima scelta: serpentina unica, catene piene (alcune partono a metà)
+    var ord = [];
+    for (var l2 = 0; l2 < linee; l2++) for (var q3 = 0; q3 < lung; q3++) ord.push(cella(l2, l2 % 2 === 0 ? q3 : lung - 1 - q3));
+    for (var i3 = 0; i3 < ord.length; i3 += cap) out.push(ord.slice(i3, i3 + cap));
+    return out;
+  }
+  if (lung > cap) {                                     // colonna più lunga di una catena: la divido in parti uguali, dal basso in su
+    var parti = Math.ceil(lung / cap), pezzo = Math.ceil(lung / parti);
+    for (var l = 0; l < linee; l++) for (var st = 0; st < lung; st += pezzo) {
+      var g = []; for (var q = st; q < Math.min(lung, st + pezzo); q++) g.push(cella(l, q)); out.push(g);
+    }
+    return out;
+  }
+  var k = Math.floor(cap / lung);
+  if (!livello && k >= 2 && k % 2) k -= 1;              // livello 0: pari, la catena finisce in basso
+  var n = Math.ceil(linee / k);
+  var per = Math.ceil(linee / n);                       // stesso numero di colonne per catena, se si può
+  if (!livello && per >= 2 && per % 2 && per < k) per += 1;
+  if (per > k) per = k;
+  for (var l0 = 0; l0 < linee; l0 += per) {
+    var gr = [];
+    for (var j = l0; j < Math.min(linee, l0 + per); j++)
+      for (var q2 = 0; q2 < lung; q2++) gr.push(cella(j, (j - l0) % 2 === 0 ? q2 : lung - 1 - q2));
+    out.push(gr);
+  }
+  return out;
+}
+
+function puoPrendere(k, s) {
+  var c = CENTRALINE[k];
+  for (var i = 0; i < c.ingressi.length; i++) if (INGRESSI[c.ingressi[i]].ok(s)) return INGRESSI[c.ingressi[i]].nome;
+  return '';
+}
+
+// divide le catene (porte) tra le centraline, una dopo l'altra, rispettando porte e pixel di ognuna
+function controlla(k, cal, quante, bk) {
+  var c = CENTRALINE[k], prob = [], libere = bk === 'porte' ? Math.floor(c.porte / 2) : c.porte;
+  var sez = [], gi = 0, pxCab = cal.px * cal.px;
+  for (var i = 0; i < quante; i++) {
+    var z = { gruppi: [], pix: 0, col: {}, rig: {} };
+    var quota = Math.min(libere, Math.ceil((cal.gp.length - gi) / (quante - i)));   // divido le porte in parti uguali
+    while (gi < cal.gp.length && z.gruppi.length < quota && z.pix + cal.gp[gi].length * pxCab <= c.max) {
+      z.gruppi.push(gi); z.pix += cal.gp[gi].length * pxCab;
+      cal.gp[gi].forEach(function (p) { z.col[p[0]] = 1; z.rig[p[1]] = 1; });
+      gi++;
+    }
+    sez.push(z);
+  }
+  var tutte = quante > 1 ? quante + ' centraline' : 'la centralina';
+  if (gi < cal.gp.length) {
+    if (cal.pix > c.max * quante) prob.push('Troppi pixel: ' + mln(cal.pix) + ' (massimo ' + mln(c.max * quante) + (quante > 1 ? ' con ' + tutte : '') + ')');
+    if (cal.porte > libere * quante) prob.push('Servono ' + cal.porte + ' porte' + (bk === 'porte' ? ' + ' + cal.porte + ' di backup' : '') +
+      ', ' + tutte + (quante > 1 ? ' ne hanno ' : ' ne ha ') + (bk === 'porte' ? libere * quante + ' per il main' : c.porte * quante));
+    if (!prob.length) prob.push('Le catene non entrano nelle centraline: servono più centraline');
+  }
+  sez.forEach(function (z, i) {
+    var w = Object.keys(z.col).length * cal.px, h = Object.keys(z.rig).length * cal.px, pre = quante > 1 ? 'Centralina ' + (i + 1) + ': ' : '';
+    if (w > c.w) prob.push(pre + 'troppo largo, ' + n(w) + ' px (massimo ' + n(c.w) + ')');
+    if (h > c.h) prob.push(pre + 'troppo alto, ' + n(h) + ' px (massimo ' + n(c.h) + ')');
+  });
+  var ing = puoPrendere(k, cal.sorg);
+  if (!ing) prob.push('Non riceve il segnale ' + cal.sorg.nome + (cal.sorg.nativo ? ' (' + cal.sorg.w + '×' + cal.sorg.h + ')' : ''));
+  return { ok: !prob.length, prob: prob, ingresso: ing, k: k, quante: quante, sez: sez, libere: libere,
+           usate: sez.filter(function (z) { return z.gruppi.length; }).length };
+}
+function nomeConf(r) { return (r.quante > 1 ? r.quante + '× ' : '') + CENTRALINE[r.k].nome; }
+
+// ===================== calcolo e disegni =====================
+function calcola() {
+  var v = leggi();
+  var cols = Math.max(1, Math.round(Number(String(v.larg).replace(',', '.')) / 0.5) || 1);
+  var rows = Math.max(1, Math.round(Number(String(v.alto).replace(',', '.')) / 0.5) || 1);
+  cols = Math.min(cols, 80); rows = Math.min(rows, 40);
+  var cab = CABINET[v.passo], px = cab.px;
+  var pw = cols * px, ph = rows * px, pix = pw * ph, num = cols * rows;
+  var perPorta = Math.floor(PORTA / (px * px));
+  var gpLiv = [0, 1, 2].map(function (lv) { return catene(cols, rows, v.dir, v.inizio, perPorta, lv); });
+  var gp = gpLiv[0];
+  var watt = Number(v.passo === 'P1.9' ? v.w19 : v.w26) || 0;
+  var kg = Number(v.passo === 'P1.9' ? v.kg19 : v.kg26) || 0;
+  var perCat = Math.max(1, Math.min(Number(v.catena) || 18, Math.floor(3000 / Math.max(1, watt))));   // max 3 kW per linea 16 A
+  var gc = catene(cols, rows, v.dir, v.inizio, perCat, 0);
+  var sorg = v.sorg === 'nativo' ? { w: pw, h: ph, hz: 60, nome: 'pixel per pixel', nativo: true } : SORGENTI[v.sorg];
+  var cal = { cols: cols, rows: rows, px: px, pw: pw, ph: ph, pix: pix, num: num, perPorta: perPorta, porte: gp.length, sorg: sorg, gp: gp };
+  var bk = v.backup, quante = Number(v.ncentr) || 1;
+  // prova i cablaggi dal più comodo al meno comodo: tiene il primo che entra nella configurazione
+  var conLivello = function (lv) { return Object.assign({}, cal, { gp: gpLiv[lv], porte: gpLiv[lv].length, liv: lv }); };
+  var prova = function (k, q) {
+    for (var lv = 0; lv < 3; lv++) { var cc = conLivello(lv), r = controlla(k, cc, q, bk); if (r.ok) { r.cal = cc; return r; } }
+    var r0 = controlla(k, conLivello(2), q, bk); r0.cal = conLivello(2); return r0;   // anche al meglio non entra: dico quanto manca
+  };
+
+  // ---- esito centralina (anche con più centraline e col backup)
+  var scelta = prova(v.centr, quante), consigli = [];
+  if (!scelta.ok) {                                   // prima UNA centralina (anche più grossa), poi più centraline
+    for (var i = 0; i < ORDINE.length; i++) {
+      if (CENTRALINE[ORDINE[i]].porte < CENTRALINE[v.centr].porte && quante === 1) continue;
+      var r2 = prova(ORDINE[i], 1); if (r2.ok) { consigli.push(r2); break; }
+    }
+    for (var q = Math.max(2, quante + 1); q <= 4; q++) { var r1 = prova(v.centr, q); if (r1.ok) { consigli.push(r1); break; } }
+    if (!consigli.length) for (var q2 = 2; q2 <= 4 && !consigli.length; q2++)
+      for (var i2 = 0; i2 < ORDINE.length; i2++) { var r3 = prova(ORDINE[i2], q2); if (r3.ok) { consigli.push(r3); break; } }
+  }
+  var eff = scelta.ok ? scelta : (consigli[0] || null);
+  if (eff) { cal = eff.cal; gp = cal.gp; }
+  function comodita(cc) {
+    var inAlto = cc.gp.filter(function (g) { return g[g.length - 1][1] > 0; }).length;
+    var aMeta = cc.gp.filter(function (g) { return g[0][1] > 0; }).length;
+    if (aMeta) return aMeta + ' porte partono a metà colonna (serve per stare in questa centralina)';
+    if (inAlto && bk !== 'no') return 'main in basso, backup in alto';
+    return 'cavi tutti in basso (comodo)';
+  }
+  var riga = function (r) {
+    return 'Ingresso ' + esc(r.ingresso) + ' · ' + r.cal.porte + ' porte' + (bk === 'porte' ? ' + ' + r.cal.porte + ' di backup' : '') +
+      (r.quante > 1 ? ' · ledwall diviso su ' + r.usate + ' centraline' : ' su ' + CENTRALINE[r.k].porte) +
+      (bk === 'centralina' ? ' · + ' + r.quante + ' ' + CENTRALINE[r.k].nome + ' di riserva per il backup' : '') +
+      '<br>🔧 ' + comodita(r.cal);
+  };
+  var h = '';
+  if (scelta.ok) {
+    h += '<div class="esito si"><b>✅ ' + nomeConf(scelta) + ' va bene</b>' + riga(scelta) + '</div>';
+  } else {
+    h += '<div class="esito no"><b>❌ ' + nomeConf(scelta) + ' non va bene</b><ul>' +
+         scelta.prob.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>';
+    consigli.forEach(function (r, i) {
+      h += '<div class="esito si"><b>👉 ' + (i ? 'Oppure: ' : 'Usa: ') + nomeConf(r) + '</b>' + riga(r) + '</div>';
+    });
+    if (!consigli.length) h += '<div class="esito no"><b>⚠️ Non basta neanche con 4 centraline</b>Serve un segnale più piccolo o una configurazione speciale: sentiamoci.</div>';
+  }
+  if (eff && eff.quante > 1) h += '<div class="aiuto" style="margin-bottom:10px">Con più centraline il segnale va mandato a tutte (splitter o due uscite della regia) e ognuna mostra la sua parte di immagine.</div>';
+  if (!sorg.nativo && (pw !== sorg.w || ph !== sorg.h)) {
+    h += '<div class="aiuto" style="margin-bottom:10px">Il ledwall è ' + n(pw) + '×' + n(ph) + ' px, il segnale ' + n(sorg.w) + '×' + n(sorg.h) +
+         ': la centralina adatta l\'immagine (non è pixel per pixel). Per il pixel per pixel la regia deve mandare ' + n(pw) + '×' + n(ph) + '.</div>';
+  }
+  $('esito').innerHTML = h;
+  $('numeri').innerHTML =
+    '<div><b>' + n(pw) + '×' + n(ph) + '</b><small>pixel del ledwall</small></div>' +
+    '<div><b>' + num + '</b><small>cabinet (' + cols + ' × ' + rows + ')</small></div>' +
+    '<div><b>' + cal.porte + '</b><small>porte di rete (max ' + perPorta + ' cabinet l\'una)</small></div>' +
+    '<div><b>' + n(watt * num / 1000, 1) + ' kW</b><small>consumo di picco</small></div>';
+
+  // ---- nome di ogni porta (centralina e numero) e dove va il backup
+  var nomePorta = {};
+  if (eff) eff.sez.forEach(function (z, ci) { z.gruppi.forEach(function (gi, k) {
+    nomePorta[gi] = { c: ci, p: k + 1, num: (eff.quante > 1 ? 'C' + (ci + 1) + '·' : '') + (k + 1),
+      bk: bk === 'porte' ? 'P' + (k + 1 + eff.libere) : (bk === 'centralina' ? 'riserva P' + (k + 1) : '') };
+  }); });
+
+  // ---- disegno segnale: colori per porta, numero della porta nel cabinet dove entra il cavo
+  var spazio = Math.max(200, ($('dSegnale').clientWidth || 340) - 20);
+  var cell = Math.max(9, Math.min(34, Math.floor(spazio / cols)));
+  var W = cols * cell, H = rows * cell, posPorta = {};
+  gp.forEach(function (g, pi) { g.forEach(function (p) { posPorta[p[0] + ',' + p[1]] = pi; }); });
+  var x = function (c) { return c * cell; }, y = function (r) { return (rows - 1 - r) * cell; };
+  var cx = function (p) { return x(p[0]) + cell / 2 - .5; }, cy = function (p) { return y(p[1]) + cell / 2 - .5; };
+  var s = '<svg width="' + (W + 2) + '" height="' + (H + 2) + '" viewBox="-1 -1 ' + (W + 2) + ' ' + (H + 2) + '" font-family="sans-serif">';
+  for (var c = 0; c < cols; c++) for (var r = 0; r < rows; r++) {
+    var pi2 = posPorta[c + ',' + r];
+    s += '<rect x="' + x(c) + '" y="' + y(r) + '" width="' + (cell - 1) + '" height="' + (cell - 1) + '" rx="2" fill="' + COL_PORTE[pi2 % 20] + '" fill-opacity=".8"/>';
+  }
+  var finisconoInAlto = 0;
+  gp.forEach(function (g, pi) {
+    s += '<polyline points="' + g.map(function (p) { return cx(p) + ',' + cy(p); }).join(' ') + '" fill="none" stroke="#111" stroke-width="1.2" stroke-opacity=".5"/>';
+    var p0 = g[0], pu = g[g.length - 1], np = nomePorta[pi] || { num: pi + 1 };
+    if (bk !== 'no') {
+      var lq = Math.max(6, cell * .5);
+      s += '<rect x="' + (cx(pu) - lq / 2) + '" y="' + (cy(pu) - lq / 2) + '" width="' + lq + '" height="' + lq + '" fill="#ff3b3b" stroke="#111" stroke-width=".8"/>';
+      if (v.dir === 'v' ? pu[1] > 0 : false) finisconoInAlto++;
+    }
+    var rr = Math.max(5, cell * .36);
+    s += '<circle cx="' + cx(p0) + '" cy="' + cy(p0) + '" r="' + rr + '" fill="#fff" stroke="#111" stroke-width=".8"/>';
+    if (cell >= 14) s += '<text x="' + cx(p0) + '" y="' + (cy(p0) + rr * .42) + '" font-size="' + Math.round(rr * (String(np.num).length > 2 ? .8 : 1.15)) + '" font-weight="700" text-anchor="middle" fill="#111">' + np.num + '</text>';
+  });
+  s += '</svg>';
+  $('dSegnale').innerHTML = s;
+  // legenda corta: una riga per centralina
+  var righeL = [];
+  if (eff) eff.sez.forEach(function (z, ci) {
+    if (!z.gruppi.length) return;
+    var cabs = z.gruppi.reduce(function (t, gi) { return t + gp[gi].length; }, 0);
+    righeL.push('<span><b>' + (eff.quante > 1 ? 'Centralina ' + (ci + 1) : CENTRALINE[eff.k].nome) + '</b>: porte 1–' + z.gruppi.length + ' · ' + cabs + ' cabinet</span>');
+  });
+  righeL.push('<span>⚪ numero = porta, dove entra il cavo MAIN (in basso)</span>');
+  if (bk === 'porte') righeL.push('<span>🟥 = cavo BACKUP, sulla porta ' + (eff ? '«numero + ' + eff.libere + '»' : 'libera') + ' della stessa centralina</span>');
+  if (bk === 'centralina') righeL.push('<span>🟥 = cavo BACKUP, stessa porta sulla centralina di riserva</span>');
+  if (finisconoInAlto) righeL.push('<span>⚠️ ' + finisconoInAlto + ' porte finiscono in alto: lì il cavo backup entra in alto</span>');
+  if (cal.liv === 2) righeL.push('<span>⚠️ Per stare nella centralina alcune porte partono a metà colonna (vedi i numeri)</span>');
+  $('lSegnale').innerHTML = righeL.join('');
+
+  // ---- disegno corrente
+  var linea = LINEE[v.linea], fasi = linea.fasi === 3 ? ['L1', 'L2', 'L3'] : ['L1'];
+  var prese = Math.max(1, Math.round(Number(v.prese) || linea.prese)), perFase = Math.ceil(prese / fasi.length);
+  var libere = Math.min(prese - 1, Math.max(0, Number(v.libere) || 0)), preseLed = prese - libere;
+  // linee divise sulle fasi in modo bilanciato (la più carica va sulla fase più scarica), max "perFase" prese per fase
+  function distribuisci(nf, gg, pf) {
+    var car = [], quante = [], fase = [];
+    for (var i = 0; i < nf; i++) { car.push(0); quante.push(0); }
+    pf = pf || perFase;
+    (gg || gc).map(function (g, ci) { return { ci: ci, w: g.length * watt }; }).sort(function (a, b) { return b.w - a.w; })
+      .forEach(function (o) {
+        var m = -1;
+        for (var f = 0; f < nf; f++) if ((quante[f] < pf || quante.every(function (q) { return q >= pf; })) && (m < 0 || car[f] < car[m])) m = f;
+        car[m] += o.w; quante[m]++; fase[o.ci] = m;
+      });
+    return { car: car, fase: fase };
+  }
+  // linee a colonne intere dal basso, divise il più possibile in parti uguali, al massimo "cap" cabinet ciascuna
+  function lineeColonne(cap, nLinee) {
+    var vert = v.dir === 'v', file = vert ? cols : rows, lung = vert ? rows : cols;
+    if (lung > cap) return null;
+    var k = Math.floor(cap / lung), nn = Math.max(nLinee || 0, Math.ceil(file / k));
+    if (nn > file) return null;
+    var out = [], fila = 0;
+    for (var g = 0; g < nn; g++) {
+      var quanteF = Math.floor(file / nn) + (g < file % nn ? 1 : 0), gr = [];
+      for (var j = 0; j < quanteF; j++, fila++) for (var q = 0; q < lung; q++) {
+        var pos = j % 2 === 0 ? q : lung - 1 - q;
+        gr.push(vert ? [v.inizio === 'bd' ? cols - 1 - fila : fila, pos] : [v.inizio === 'bd' ? cols - 1 - pos : pos, fila]);
+      }
+      out.push(gr);
+    }
+    return out;
+  }
+  // scelgo le linee: uso le prese del quadro (al massimo una linea per presa), cabinet divisi in parti uguali
+  function scegliLinee(pr) {
+    var minimo = Math.ceil(num / perCat), meglio = null;
+    for (var nl = minimo; nl <= pr; nl++) {
+      var gg = lineeColonne(perCat, nl);
+      if (!gg || gg.length > pr) continue;
+      var m = Math.max.apply(null, distribuisci(fasi.length, gg).car);
+      if (!meglio || m < meglio.m - 1) meglio = { m: m, gg: gg };
+    }
+    if (meglio) return meglio.gg;
+    var c2 = catene(cols, rows, v.dir, v.inizio, perCat, 0);
+    if (c2.length <= pr) return c2;
+    return catene(cols, rows, v.dir, v.inizio, perCat, 2);   // serpentina piena: meno linee possibili
+  }
+  gc = scegliLinee(preseLed);
+  var preseOk = gc.length <= preseLed;
+  var dist = distribuisci(fasi.length), caricoFase = {}, posCat = {};
+  fasi.forEach(function (f, i) { caricoFase[f] = dist.car[i]; });
+  gc.forEach(function (g, ci) { g.forEach(function (p) { posCat[p[0] + ',' + p[1]] = ci; }); });
+  var s2 = '<svg width="' + (W + 2) + '" height="' + (H + 2) + '" viewBox="-1 -1 ' + (W + 2) + ' ' + (H + 2) + '" font-family="sans-serif">';
+  for (var c2 = 0; c2 < cols; c2++) for (var r2 = 0; r2 < rows; r2++) {
+    var ci2 = posCat[c2 + ',' + r2], f2 = fasi[dist.fase[ci2]];
+    s2 += '<rect x="' + x(c2) + '" y="' + y(r2) + '" width="' + (cell - 1) + '" height="' + (cell - 1) + '" rx="2" fill="' + COL_FASI[f2] + '" fill-opacity="' + (ci2 % 2 ? .75 : 1) + '"/>';
+  }
+  gc.forEach(function (g, ci) {
+    s2 += '<polyline points="' + g.map(function (p) { return cx(p) + ',' + cy(p); }).join(' ') + '" fill="none" stroke="#ffd84d" stroke-width="1" stroke-opacity=".6"/>';
+    var p0 = g[0], lq = Math.max(8, cell * .62);
+    s2 += '<rect x="' + (cx(p0) - lq / 2) + '" y="' + (cy(p0) - lq / 2) + '" width="' + lq + '" height="' + lq + '" rx="2" fill="#ffd84d" stroke="#111" stroke-width=".8"/>';
+    if (cell >= 14) s2 += '<text x="' + cx(p0) + '" y="' + (cy(p0) + lq * .3) + '" font-size="' + Math.round(lq * .75) + '" font-weight="700" text-anchor="middle" fill="#111">' + (ci + 1) + '</text>';
+  });
+  s2 += '</svg>';
+  $('dCorrente').innerHTML = s2;
+  var limite = linea.a * 230, maxF = Math.max.apply(null, dist.car), pctMax = Math.round(maxF / limite * 100);
+  var testoF = fasi.map(function (f, i) {
+    var pct = Math.round(caricoFase[f] / limite * 100), quali = [];
+    dist.fase.forEach(function (fi, ci) { if (fi === i) quali.push(ci + 1); });
+    return '<span><i style="background:' + COL_FASI[f] + '"></i>' + f + ': linee ' + quali.join(', ') + ' · ' + n(caricoFase[f] / 1000, 1) + ' kW = ' +
+      n(caricoFase[f] / 230, 1) + ' A su ' + linea.a + ' A (' + pct + '%)' + (pct > 100 ? ' ❌' : pct > 80 ? ' ⚠️' : '') + '</span>';
+  });
+  // prese libere: vanno sulle fasi più scariche che hanno ancora una presa
+  var testoLibere = '';
+  if (libere && preseOk) {
+    var usate = fasi.map(function () { return 0; }), resto = dist.car.slice(), lib = [];
+    dist.fase.forEach(function (fi) { usate[fi]++; });
+    for (var li = 0; li < libere; li++) {
+      var mf = -1;
+      for (var f3 = 0; f3 < fasi.length; f3++) if (usate[f3] < perFase && (mf < 0 || resto[f3] < resto[mf])) mf = f3;
+      if (mf < 0) break;
+      var kw = Math.max(0, Math.min(16 * 230, limite - resto[mf]));
+      lib.push(fasi[mf] + ': fino a ' + n(kw / 1000, 1) + ' kW (' + n(kw / 230, 0) + ' A)');
+      usate[mf]++; resto[mf] += kw;
+    }
+    testoLibere = '<span style="width:100%;color:var(--testo)">🔌 <b>' + lib.length + (lib.length === 1 ? ' presa 16 A libera' : ' prese 16 A libere') + '</b> · ' + lib.join(' · ') + '</span>';
+  }
+  var troppo = maxF > limite || !preseOk, carico = maxF > limite * 0.8;
+  var lineaGiusta = '';
+  if (troppo) {                                     // quale fornitura basterebbe (fase più carica entro il 100% al picco)
+    ['16m', '32m', '16t', '32t', '63t'].some(function (k) {
+      var L = LINEE[k];
+      if (Math.ceil(num / perCat) > L.prese - libere || watt * num > L.fasi * L.a * 230) return false;
+      lineaGiusta = L.nome; return true;
+      return false;
+    });
+  }
+  var maxCat = Math.max.apply(null, gc.map(function (g) { return g.length; }));
+  var servePer = Math.ceil(num / Math.max(1, preseLed)), consiglio = '';
+  if (!preseOk && libere && servePer * watt <= 3000)
+    consiglio = ' 👉 Oppure con linee da ' + servePer + ' cabinet (' + n(servePer * watt / 1000, 1) + ' kW, entro il limite di 3 kW): alza «Max cabinet per linea» in ⚙️ Impostazioni a ' + servePer + '.';
+  else if (!preseOk && libere) consiglio = ' 👉 Servirebbero linee da ' + servePer + ' cabinet (' + n(servePer * watt / 1000, 1) + ' kW): oltre i 3 kW, non si può.';
+  var esitoC = !preseOk ? '❌ Servono ' + gc.length + ' linee ma ' + (libere ? 'lasciando ' + (libere === 1 ? '1 presa libera' : libere + ' prese libere') + ' ne restano ' + preseLed : 'il quadro ha solo ' + (prese === 1 ? '1 presa' : prese + ' prese') + ' 16 A') + ': ' + (lineaGiusta ? 'serve almeno una ' + lineaGiusta : 'servono due forniture separate') :
+    troppo ? '❌ La ' + linea.nome + ' non basta: ' + (lineaGiusta ? 'serve almeno una ' + lineaGiusta : 'servono due forniture separate') :
+    carico ? '⚠️ La ' + linea.nome + ' basta, ma è carica (' + pctMax + '% al picco sulla fase più usata)' :
+    '✅ La ' + linea.nome + ' basta (' + pctMax + '% al picco sulla fase più usata)';
+  $('lCorrente').innerHTML = '<span style="width:100%;color:var(--testo);font-size:14px"><b>' + esitoC + '</b>' + consiglio + '</span>' +
+    '<span><b>' + gc.length + ' linee da 16 A su ' + (prese === 1 ? '1 presa' : prese + ' prese') + ' del quadro</b> · fino a ' + maxCat + ' cabinet = ' + n(maxCat * watt / 1000, 1) + ' kW per linea (max 3 kW) · totale ' + n(watt * num / 1000, 1) + ' kW al picco</span>' +
+    '<span>🟨 numero = linea, dove entra la corrente (in basso)</span>' + testoF.join('') + testoLibere;
+
+  // ---- retro: B-Lite e zavorre
+  var passoB = Number(v.blite) || 0, largM = cols * 0.5, altM = rows * 0.5;
+  var quota = Math.max(0, Number(String(v.quota).replace(',', '.')) || 0);
+  var nb = passoB ? Math.floor(largM / passoB + 1e-9) + 1 : 0;
+  var hB = Math.round((quota + altM) * 10) / 10, zav = Number(v.zav) || 0, kgz = Number(v.kgzav) || 30;
+  var sc = Math.min((spazio - 60) / largM, 150 / (hB + 0.3)), RW = largM * sc + 40, RH = (hB + 0.6) * sc + 30;
+  var g0 = (hB + 0.3) * sc + 10, sx = function (m) { return 20 + m * sc; };
+  var s3 = '<svg width="' + Math.round(RW) + '" height="' + Math.round(RH) + '" font-family="sans-serif" font-size="11">';
+  s3 += '<line x1="0" y1="' + g0 + '" x2="' + RW + '" y2="' + g0 + '" stroke="#9298a4"/>';
+  s3 += '<rect x="' + sx(0) + '" y="' + (g0 - (quota + altM) * sc) + '" width="' + largM * sc + '" height="' + altM * sc + '" fill="#2a2e37" stroke="#5a606b"/>';
+  for (var b = 0; b < nb; b++) {
+    var bx = sx(Math.min(b * passoB, largM));
+    s3 += '<rect x="' + (bx - 2) + '" y="' + (g0 - hB * sc) + '" width="4" height="' + hB * sc + '" fill="#c9ced6"/>';
+    for (var z = 0; z < Math.min(zav, 6); z++) s3 += '<rect x="' + (bx - 6) + '" y="' + (g0 - 4 - z * 4.5) + '" width="12" height="4" fill="#9a8f7f" stroke="#0d0f13" stroke-width=".5"/>';
+  }
+  if (quota > 0) s3 += '<text x="' + (sx(largM) + 4) + '" y="' + (g0 - 2) + '" fill="#9298a4">' + n(quota, 1) + ' m</text>';
+  s3 += '<text x="' + (sx(largM) + 4) + '" y="' + (g0 - (quota + altM / 2) * sc) + '" fill="#9298a4">' + n(altM, 1) + ' m</text>';
+  s3 += '<text x="' + sx(largM / 2) + '" y="' + (g0 + 14) + '" text-anchor="middle" fill="#9298a4">' + n(largM, 1) + ' m</text></svg>';
+  $('dRetro').innerHTML = s3;
+  $('aRetro').innerHTML = nb ? (nb + ' B-Lite alte ' + n(hB, 1) + ' m (una ogni ' + n(passoB, 1) + ' m)' +
+    (zav ? ' · ' + zav + ' zavorre per base = ' + (zav * kgz) + ' kg ciascuna' : ' · senza zavorre') +
+    (v.mont === 'sbalzo' ? ' · ledwall appeso a ' + n(quota, 1) + ' m da terra' : '')) : 'Senza B-Lite.';
+
+  // ---- materiale
+  var mat = [
+    ['Cabinet ' + v.passo + ' 50×50', num],
+    ['Centralina', eff ? nomeConf(eff) : 'da decidere'],
+    ['Cavi di rete centralina → ledwall (main)', cal.porte],
+    ['Cavi di rete tra cabinet', num - cal.porte],
+    ['Linee corrente (dal quadro)', gc.length],
+    ['Ponticelli powerCON tra cabinet', num - gc.length]
+  ];
+  if (bk !== 'no') mat.splice(3, 0, ['Cavi di rete backup (all\'ultimo cabinet)', cal.porte]);
+  if (eff && bk === 'centralina') mat.splice(2, 0, ['Centralina di riserva (backup)', eff.quante + '× ' + CENTRALINE[eff.k].nome]);
+  if (nb) mat.push(['B-Lite da ' + n(hB, 1) + ' m', nb]);
+  if (nb && zav) mat.push(['Zavorre da ' + kgz + ' kg', nb * zav + ' (' + n(nb * zav * kgz) + ' kg)']);
+  if (kg) mat.push(['Peso ledwall', n(kg * num) + ' kg']);
+  $('materiale').innerHTML = mat.map(function (m) { return '<div><span>' + esc(m[0]) + '</span><span>' + esc(m[1]) + '</span></div>'; }).join('');
+  $('avvMat').innerHTML = (troppo ? esitoC + '. ' : '') +
+    (!kg ? 'Peso dei cabinet da inserire nelle Impostazioni.' : '');
+
+  // ---- intestazione
+  $('tLavoro').textContent = v.lavoro || 'Ledwall ' + n(largM, 1) + ' × ' + n(altM, 1) + ' m';
+  var d = v.data ? v.data.split('-').reverse().join('/') : '';
+  $('tSotto').textContent = [d, v.luogo, v.passo + ' · ' + n(largM, 1) + '×' + n(altM, 1) + ' m · ' + (v.mont === 'sbalzo' ? 'a sbalzo' : 'a terra'), LINEE[v.linea].nome]
+    .filter(Boolean).join(' · ');
+  $('cNote').classList.toggle('nascosto', !v.note);
+  $('tNote').textContent = v.note || '';
+  if (!TECNICO) try { localStorage.setItem('lvl_ledwall_impost', JSON.stringify({ w19: v.w19, w26: v.w26, kg19: v.kg19, kg26: v.kg26, catena: v.catena, kgzav: v.kgzav, prese: v.prese })); } catch (e) {}
+}
+
+// ===================== link per i tecnici =====================
+function link() {
+  var v = leggi(), p = new URLSearchParams();
+  CAMPI.forEach(function (k) { if (v[k] !== '') p.set(k, v[k]); });
+  p.set('t', '1');
+  return location.href.split('#')[0].split('?')[0] + '#' + p.toString();
+}
+function carica() {
+  try { var im = JSON.parse(localStorage.getItem('lvl_ledwall_impost') || 'null'); if (im) Object.keys(im).forEach(function (k) { if (im[k] !== '' && $(k)) $(k).value = im[k]; }); } catch (e) {}
+  var hsh = location.hash.replace(/^#/, '');
+  if (!hsh) return;
+  var p = new URLSearchParams(hsh);
+  CAMPI.forEach(function (k) { if (p.has(k)) $(k).value = p.get(k); });
+  if (p.get('t') === '1') { TECNICO = true; $('modulo').classList.add('nascosto'); }
+}
+$('condividi').addEventListener('click', function () {
+  var l = link(), t = $('lavoro').value || 'Ledwall';
+  if (navigator.share) { navigator.share({ title: t, text: 'Ledwall ' + t + ': come si monta', url: l }).catch(function () {}); return; }
+  try { navigator.clipboard.writeText(l); $('condOk').textContent = 'Link copiato: incollalo su WhatsApp ai tecnici.'; }
+  catch (e) { prompt('Copia il link:', l); }
+});
+$('stampa').addEventListener('click', function () { window.print(); });
+$('mont').addEventListener('change', function () { if (this.value === 'sbalzo' && Number($('quota').value) < 1) $('quota').value = 2; if (this.value === 'terra' && Number($('quota').value) >= 1) $('quota').value = 0; calcola(); });
+document.addEventListener('input', function (e) { if (e.target.closest('#modulo')) calcola(); });
+document.addEventListener('change', function (e) { if (e.target.closest('#modulo')) calcola(); });
+carica();
+calcola();
+</script>
+</body>
+</html>
