@@ -103,6 +103,11 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
 .voce.mod{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:10px;align-items:center}
 .voce .matita{margin:0;width:40px;min-height:40px;padding:0;border-radius:10px;background:var(--carta2);border:1px solid var(--bordo);color:var(--testo);font-size:17px;font-weight:400}
 button.rosso{background:transparent;color:var(--rosso);border:1px solid var(--rosso)}
+/* 21/11/2026: icona calendario col giorno di oggi */
+#tabMie{display:flex;align-items:center;justify-content:center}
+.cal-ico{display:inline-flex;flex-direction:column;flex-shrink:0;width:22px;height:23px;border-radius:5px;overflow:hidden;margin-right:6px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.cal-ico b{display:block;height:8px;line-height:8px;font-size:6px;font-weight:800;letter-spacing:.02em;color:#fff;background:#e5483a;text-align:center;text-transform:uppercase}
+.cal-ico i{display:block;flex:1;line-height:15px;font-size:12px;font-weight:800;font-style:normal;color:#222;text-align:center}
 </style>
 </head>
 <body>
@@ -114,7 +119,7 @@ button.rosso{background:transparent;color:var(--rosso);border:1px solid var(--ro
 
   <div class="schede" role="tablist">
     <button type="button" id="tabSegna" class="on" role="tab">✏️ Segna</button>
-    <button type="button" id="tabMie" role="tab">📅 Le mie</button>
+    <button type="button" id="tabMie" role="tab"><span class="cal-ico" aria-hidden="true"><b id="calMese"></b><i id="calGiorno"></i></span>Le mie</button>
     <button type="button" id="tabGuasto" role="tab">🔧 Guasto</button>
   </div>
   <div id="notif" class="notif nascosto"></div>
@@ -815,6 +820,16 @@ $('mCancella').addEventListener('click', function () {
 $('mAnnulla').addEventListener('click', chiudiModifica);
 $('mesePrima').addEventListener('click', chiudiModifica);
 $('meseDopo').addEventListener('click', chiudiModifica);
+
+// icona del calendario col giorno di oggi (si aggiorna da sola, anche se l'app resta aperta)
+function iconaOggi() {
+  var d = new Date();
+  $('calMese').textContent = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'][d.getMonth()];
+  $('calGiorno').textContent = d.getDate();
+}
+iconaOggi();
+setInterval(iconaOggi, 60000);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) iconaOggi(); });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 mostraNotif();
