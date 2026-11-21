@@ -99,6 +99,10 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
 .sk-l .tbc{color:#78a9ff;font-size:12px;font-weight:700;margin-left:6px}
 .foto-mini{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .foto-mini img{width:76px;height:76px;object-fit:cover;border-radius:10px;border:1px solid var(--bordo);cursor:pointer}
+/* 21/11/2026: la matita per correggere o cancellare una giornata */
+.voce.mod{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:10px;align-items:center}
+.voce .matita{margin:0;width:40px;min-height:40px;padding:0;border-radius:10px;background:var(--carta2);border:1px solid var(--bordo);color:var(--testo);font-size:17px;font-weight:400}
+button.rosso{background:transparent;color:var(--rosso);border:1px solid var(--rosso)}
 </style>
 </head>
 <body>
@@ -126,6 +130,27 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
     </form>
 
     <div id="mieDati" class="nascosto">
+      <form id="modForm" class="card nascosto" novalidate style="margin-bottom:14px;border-color:rgba(246,152,29,.45)">
+        <div class="sez" style="margin-top:0">✏️ Correggi la giornata</div>
+        <label for="mCommessa">Commessa / evento <b>*</b></label>
+        <input id="mCommessa" list="commesse" maxlength="120">
+        <label for="mLocation">Location</label>
+        <input id="mLocation" list="locations" maxlength="120">
+        <label for="mMansione">Mansione <b>*</b></label>
+        <select id="mMansione"></select>
+        <label for="mData">Giorno <b>*</b></label>
+        <input id="mData" type="date">
+        <div class="riga">
+          <div><label for="mInizio">Ora arrivo <b>*</b></label><input id="mInizio" type="time"></div>
+          <div><label for="mFine">Ora fine <b>*</b></label><input id="mFine" type="time"></div>
+        </div>
+        <label for="mNote">Note</label>
+        <textarea id="mNote" maxlength="500"></textarea>
+        <button id="mSalva" type="submit">Salva la correzione</button>
+        <button id="mCancella" type="button" class="rosso">🗑 Cancella questa giornata</button>
+        <button id="mAnnulla" type="button" class="sec">Annulla</button>
+        <div id="mErr" class="err"></div>
+      </form>
       <div class="card">
         <div class="mese">
           <button type="button" id="mesePrima" aria-label="Mese prima">‹</button>
@@ -518,11 +543,14 @@ function disegnaMie(r, vecchio) {
   $('mieChi').textContent = '👷 ' + (r.nome || io.nome || '');
   // giornate segnate
   var gg = r.giornate || [];
-  $('mieGiornate').innerHTML = gg.length ? gg.map(function (g) {
+  GG_MOSTRATE = gg;
+  $('mieGiornate').innerHTML = gg.length ? gg.map(function (g, i) {
     var orari = g.inizio && g.fine ? g.inizio + '–' + g.fine : '';
     var sotto = [g.mansione, g.location, orari].filter(Boolean).join(' · ');
-    return '<div class="voce"><div class="t"><span>' + esc(dataBella(g.data)) + ' · ' + esc(g.commessa || '(senza commessa)') + '</span><span>' + numIt(g.ore) + ' h</span></div>' +
-      (sotto ? '<div class="s">' + esc(sotto) + '</div>' : '') + '</div>';
+    var corpo = '<div class="t"><span>' + esc(dataBella(g.data)) + ' · ' + esc(g.commessa || '(senza commessa)') + '</span><span>' + numIt(g.ore) + ' h</span></div>' +
+      (sotto ? '<div class="s">' + esc(sotto) + '</div>' : '');
+    if (!g.rif || !g.modificabile) return '<div class="voce">' + corpo + '</div>';
+    return '<div class="voce mod"><div>' + corpo + '</div><button type="button" class="matita" data-i="' + i + '" aria-label="Correggi o cancella">✏️</button></div>';
   }).join('') : '<div class="vuoto">Nessuna giornata segnata in ' + esc(nomeMese(MESE)) + '.</div>';
   // resoconto del mese
   var rs = r.resoconto || { giornate: 0, ore: 0, oltre8: 0, lavori: [] };
@@ -643,14 +671,9 @@ function nomeScheda() {
 }
 function schedaLavoro(p) {
   var t = '<div class="sk-l"><h4>' + esc(p.lavoro || 'Lavoro') + (p.tbc ? '<span class="tbc">DA CONFERMARE</span>' : '') + '</h4>';
-  var m = /non indicata/i.test(p.mansione || '') ? '' : p.mansione;
-  var quando = [p.cosa, p.orario].filter(Boolean).join(' · ');
-  var ind = p.indirizzo || p.dove;
-  if (m) t += '<div class="r">🎛️ ' + esc(m) + '</div>';
-  if (quando) t += '<div class="r">🕗 ' + esc(quando) + '</div>';
+  // 21/11: solo il lavoro e il link a Google Maps (niente squadra, orari e note)
+  var ind = p.indirizzo;
   if (ind) t += '<div class="r">📍 <a href="' + esc(mapsLink(ind)) + '" target="_blank" rel="noopener">' + esc(String(ind).replace(/, Italia$/, '')) + '</a></div>';
-  if (p.squadra) t += '<div class="r">👥 ' + esc(p.squadra) + '</div>';
-  if (p.note) t += '<div class="r">📝 ' + esc(p.note) + '</div>';
   return t + '</div>';
 }
 function disegnaScheda(r) {
@@ -735,6 +758,63 @@ $('fg').addEventListener('submit', function (ev) {
     }).catch(function () { pronto(); $('gErr').textContent = 'Invio non riuscito: controlla la rete e riprova.'; });
 });
 $('gAltro').addEventListener('click', function () { $('gFatto').classList.add('nascosto'); $('fg').classList.remove('nascosto'); });
+
+// ================= CORREGGI / CANCELLA UNA GIORNATA (la ✏️ in «Le mie giornate») – 21/11/2026 =================
+var GG_MOSTRATE = [], MOD = null;
+function apriModifica(g) {
+  MOD = g;
+  var lista = MANSIONI.slice();
+  if (g.mansione && lista.indexOf(g.mansione) < 0) lista.unshift(g.mansione);
+  $('mMansione').innerHTML = lista.map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('');
+  $('mMansione').value = g.mansione || lista[0];
+  $('mCommessa').value = g.commessa || ''; $('mLocation').value = g.location || ''; $('mData').value = g.data;
+  $('mInizio').value = g.inizio || ''; $('mFine').value = g.fine || ''; $('mNote').value = g.note || '';
+  $('mErr').textContent = ''; $('mCancella').dataset.sicuro = ''; $('mCancella').textContent = '🗑 Cancella questa giornata';
+  $('modForm').classList.remove('nascosto');
+  window.scrollTo(0, 0);
+}
+function chiudiModifica() { MOD = null; $('modForm').classList.add('nascosto'); }
+function mandaModifica(azione) {
+  if (!MOD) return;
+  var io = mem.get('io', {}) || {};
+  var g = { commessa: $('mCommessa').value.trim(), location: $('mLocation').value.trim(), mansione: $('mMansione').value,
+            data: $('mData').value, inizio: $('mInizio').value, fine: $('mFine').value, note: $('mNote').value.trim() };
+  if (azione === 'modifica') {
+    var manca = [];
+    if (!g.commessa) manca.push('commessa'); if (!g.mansione) manca.push('mansione'); if (!g.data) manca.push('giorno');
+    if (!g.inizio) manca.push('ora arrivo'); if (!g.fine) manca.push('ora fine');
+    if (manca.length) { $('mErr').textContent = 'Manca: ' + manca.join(', '); return; }
+  }
+  if (!navigator.onLine) { $('mErr').textContent = 'Serve la rete: riprova quando c’è campo.'; return; }
+  var bottoni = ['mSalva', 'mCancella', 'mAnnulla'];
+  bottoni.forEach(function (b) { $(b).disabled = true; });
+  $('mErr').textContent = azione === 'cancella' ? 'Cancello…' : 'Salvo…';
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ api: 'giornata_modifica', azione: azione, rif: MOD.rif, nome: io.nome, tel: idTelefono(), giornata: g }) })
+    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      bottoni.forEach(function (b) { $(b).disabled = false; });
+      if (!r || !r.ok) { $('mErr').textContent = (r && r.errore) || 'Errore, riprova.'; return; }
+      chiudiModifica();
+      caricaMie(io);
+      mostraStato(azione === 'cancella' ? '🗑 Giornata cancellata.' : '✅ Giornata corretta.');
+    }).catch(function () {
+      bottoni.forEach(function (b) { $(b).disabled = false; });
+      $('mErr').textContent = 'Non riuscito: controlla la rete e riprova.';
+    });
+}
+$('mieGiornate').addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('.matita') : null;
+  if (b && GG_MOSTRATE[+b.dataset.i]) apriModifica(GG_MOSTRATE[+b.dataset.i]);
+});
+$('modForm').addEventListener('submit', function (ev) { ev.preventDefault(); mandaModifica('modifica'); });
+$('mCancella').addEventListener('click', function () {
+  if (!this.dataset.sicuro) { this.dataset.sicuro = '1'; this.textContent = 'Sicuro? Tocca di nuovo per cancellare'; return; }
+  mandaModifica('cancella');
+});
+$('mAnnulla').addEventListener('click', chiudiModifica);
+$('mesePrima').addEventListener('click', chiudiModifica);
+$('meseDopo').addEventListener('click', chiudiModifica);
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 mostraNotif();
