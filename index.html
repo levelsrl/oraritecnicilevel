@@ -103,6 +103,15 @@ footer{text-align:center;color:var(--grigio);font-size:12px;margin-top:18px}
 .voce.mod{display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:10px;align-items:center}
 .voce .matita{margin:0;width:40px;min-height:40px;padding:0;border-radius:10px;background:var(--carta2);border:1px solid var(--bordo);color:var(--testo);font-size:17px;font-weight:400}
 button.rosso{background:transparent;color:var(--rosso);border:1px solid var(--rosso)}
+/* 26/11/2026: le giornate dimenticate */
+.manca{margin-bottom:14px;border-color:rgba(255,99,99,.55)}
+.manca h3{margin:0 0 4px;font-size:17px}
+.manca .m-r{padding:12px 0 2px;border-top:1px solid var(--bordo);margin-top:10px}
+.manca .m-r b{font-size:16px}
+.manca .m-r .s{color:var(--grigio);font-size:14px;margin-top:2px;overflow-wrap:anywhere}
+.manca .m-b{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.manca .m-b button{margin-top:10px;min-height:44px;font-size:15px}
+.manca .m-err{color:var(--rosso);font-size:13px;margin-top:6px;min-height:0}
 /* 21/11/2026: icona calendario col giorno di oggi */
 #tabMie{display:flex;align-items:center;justify-content:center}
 .cal-ico{display:inline-flex;flex-direction:column;flex-shrink:0;width:22px;height:23px;border-radius:5px;overflow:hidden;margin-right:6px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
@@ -205,6 +214,7 @@ button.rosso{background:transparent;color:var(--rosso);border:1px solid var(--ro
   </div>
 
   <div id="segna">
+  <div id="mancaBox" class="nascosto"></div>
   <div id="schedaBox" class="nascosto"></div>
   <form id="f" class="card" autocomplete="on" novalidate>
     <label for="tecnico">Nome e cognome <b>*</b></label>
@@ -682,6 +692,7 @@ function schedaLavoro(p) {
   return t + '</div>';
 }
 function disegnaScheda(r) {
+  disegnaMancanti(r && r.da_segnare);                // 26/11: le giornate dimenticate, in alto
   var box = $('schedaBox');
   var righe = (r && r.righe) || [], html = '';
   [[oggi(), 'Oggi'], [isoAdd(oggi(), 1), 'Domani']].forEach(function (c) {
@@ -702,6 +713,66 @@ function caricaScheda() {
       r.nome = nome; mem.set('scheda', r); disegnaScheda(r);
     }).catch(function () {});
 }
+
+// ================= GIORNATE DIMENTICATE (dal calendario Level) – 26/11/2026 =================
+// Il foglio dice in che giorni eri in calendario e non hai ancora segnato niente (ultimi 30 giorni).
+var MANCA = [];
+function giorniInCoda() {
+  var s = {};
+  (mem.get('coda', []) || []).forEach(function (c) {
+    (Array.isArray(c && c.giornate) ? c.giornate : [c]).forEach(function (g) { if (g && g.data) s[g.data] = true; });
+  });
+  return s;
+}
+function disegnaMancanti(lista) {
+  var c = giorniInCoda(), box = $('mancaBox');
+  MANCA = (lista || []).filter(function (x) { return x && x.giorno && !c[x.giorno]; });
+  if (!MANCA.length) { box.classList.add('nascosto'); box.innerHTML = ''; return; }
+  var vecchi = MANCA.filter(function (x) { return !x.oggi; }).length;
+  var tit = vecchi ? '⚠️ ' + (vecchi === 1 ? 'Ti sei dimenticato 1 giornata' : 'Ti sei dimenticato ' + vecchi + ' giornate')
+                   : '📝 Ricordati di segnare la giornata di oggi';
+  box.innerHTML = '<div class="card manca"><h3>' + tit + '</h3>' + MANCA.map(function (x, i) {
+    var lav = (x.lavori || []).join(' · ') || 'Lavoro dal calendario';
+    return '<div class="m-r"><b>' + (x.oggi ? 'Oggi · ' : '') + esc(dataBella(x.giorno)) + '</b>' +
+      '<div class="s">' + esc(lav) + (x.dove ? ' · ' + esc(x.dove) : '') + '</div>' +
+      '<div class="m-b"><button type="button" class="m-segna" data-i="' + i + '">Segna</button>' +
+      (x.oggi ? '' : '<button type="button" class="sec m-no" data-i="' + i + '">Non ci sono andato</button>') + '</div>' +
+      '<div class="m-err" id="mErr' + i + '"></div></div>';
+  }).join('') + '</div>';
+  box.classList.remove('nascosto');
+}
+function segnaMancante(x) {
+  if ($('f').classList.contains('nascosto')) $('altra').click();
+  if (multi()) { $('multi').checked = false; $('multi').dispatchEvent(new Event('change')); }
+  if (x.lavori && x.lavori[0]) $('commessa').value = x.lavori[0];
+  if (x.dove) $('location').value = x.dove;
+  $('data').value = x.giorno;
+  $('data').dispatchEvent(new Event('change'));
+  aggiornaOre();
+  $('f').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(function () { try { $('inizio').focus(); } catch (e) {} }, 400);
+}
+function nonCiSonoAndato(x, b, i) {
+  if (!b.dataset.sicuro) { b.dataset.sicuro = '1'; b.textContent = 'Sicuro? Tocca ancora'; return; }
+  var io = mem.get('io', {}) || {}, nome = nomeScheda();
+  if (!navigator.onLine) { $('mErr' + i).textContent = 'Serve la rete: riprova quando c’è campo.'; return; }
+  b.disabled = true; b.textContent = 'Un attimo…';
+  fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ api: 'giornata_non_fatta', nome: io.nome || nome, tel: idTelefono(), giorno: x.giorno }) })
+    .then(function (r) { return r.json(); })
+    .then(function (r) {
+      if (!r || !r.ok) { b.disabled = false; b.textContent = 'Non ci sono andato'; b.dataset.sicuro = ''; $('mErr' + i).textContent = (r && r.errore) || 'Non riuscito, riprova.'; return; }
+      var v = mem.get('scheda', null);
+      if (v && v.da_segnare) { v.da_segnare = v.da_segnare.filter(function (y) { return y.giorno !== x.giorno; }); mem.set('scheda', v); disegnaMancanti(v.da_segnare); }
+      caricaScheda();
+    }).catch(function () { b.disabled = false; b.textContent = 'Non ci sono andato'; b.dataset.sicuro = ''; $('mErr' + i).textContent = 'Non riuscito: controlla la rete.'; });
+}
+$('mancaBox').addEventListener('click', function (e) {
+  var b = e.target.closest ? e.target.closest('button') : null;
+  if (!b || !MANCA[+b.dataset.i]) return;
+  if (b.classList.contains('m-segna')) segnaMancante(MANCA[+b.dataset.i]);
+  else if (b.classList.contains('m-no')) nonCiSonoAndato(MANCA[+b.dataset.i], b, +b.dataset.i);
+});
 
 // ================= GUASTI: foto + due parole, li vede subito Giorgio – 20/11/2026 =================
 var G_FOTO = [];
